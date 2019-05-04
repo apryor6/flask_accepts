@@ -100,12 +100,12 @@ def create_app(env=None):
     def error(e):
         return jsonify(e.data), 400
 
-    @app.route('/widget', methods=['GET'])
+    @app.route('/get_a_widget', methods=['GET'])
     @responds(schema=WidgetSchema)
     def get():
         return request.parsed_obj
 
-    @app.route('/widget', methods=['POST'])
+    @app.route('/make_a_widget', methods=['POST'])
     @accepts(dict(name='arg', type=int), schema=WidgetSchema)
     def post():
         print(request.parsed_args)
