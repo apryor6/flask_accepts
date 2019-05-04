@@ -20,25 +20,21 @@ from flask_accepts import accepts
 
 def create_app(env=None):
     app = Flask(__name__)
-    @app.route('/')
-    def health():
-        return jsonify('healthy')
 
     @app.errorhandler(400)
     def error(e):
         return jsonify(e.data), 400
+
+		@app.route('/test')
+		@accepts(dict(name='foo', type=int))
+		def test():
+				print('foo = ', request.parsed_args.get('foo'))
+				return 'success'
+
     return app
 
 
 app = create_app()
-
-
-@app.route('/test')
-@accepts(dict(name='foo', type=int))
-def test():
-    print('foo = ', request.parsed_args.get('foo'))
-    return 'success'
-
 
 print('Example with valid int param foo=3')
 with app.test_client() as cl:
