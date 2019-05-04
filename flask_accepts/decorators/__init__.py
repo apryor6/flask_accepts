@@ -1,1 +1,1 @@
-from .decorators import accepts  # noqa
+from .decorators import accepts, responds  # noqa

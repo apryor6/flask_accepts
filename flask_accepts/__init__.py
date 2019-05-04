@@ -1,1 +1,1 @@
-from flask_accepts.decorators import accepts  # noqa
+from flask_accepts.decorators import accepts, responds  # noqa

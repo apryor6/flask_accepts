@@ -63,3 +63,54 @@ Example with invalid int param foo="baz"
 Status:  400
 Content:  {'message': {'foo': "invalid literal for int() with base 10: 'baz'"}}
 ```
+
+## Usage with Marshmallow schemas
+
+Both the `accepts` and `responds` decorators will accept a keyword argument `schemas` that
+is a Marshmallow Schema.
+
+For `accepts`, the schema will be used to parse the JSON body
+of a request, and the result will be stored in the Flask request object at `request.parsed_obj`. Note that this input is the _class_ of the schema, not an object of it. The object creation is handled internally. You can use the `post_load` decorator to control exactly what object is returned when the `load` method of the schema is called. See [here](https://marshmallow.readthedocs.io/en/3.0/extending.html) for more information.
+
+For `responds`, the schema will be used to dump the returned value from the decorated function. Note that this means you should return the _object_ you want to serialize. You need not interact directly with the schema in any way other than passing it in the decorator.
+
+```
+class Widget:
+    def __init__(self, foo: str, baz: int):
+        self.foo = foo
+        self.baz = baz
+
+    def __repr__(self):
+        return f"<Widget(foo='{self.foo}', baz={self.baz})>"
+
+
+class WidgetSchema(ma.Schema):
+    foo = ma.String(100)
+    baz = ma.Integer()
+
+    @post_load
+    def make(self, kwargs):
+        return Widget(**kwargs)
+
+
+def create_app(env=None):
+    app = Flask(__name__)
+    ma.init_app(app)
+    @app.errorhandler(400)
+    def error(e):
+        return jsonify(e.data), 400
+
+    @app.route('/widget', methods=['GET'])
+    @responds(schema=WidgetSchema)
+    def get():
+        return request.parsed_obj
+
+    @app.route('/widget', methods=['POST'])
+    @accepts(dict(name='arg', type=int), schema=WidgetSchema)
+    def post():
+        print(request.parsed_args)
+        print(request.parsed_obj)
+        return jsonify('success')
+
+    return app
+```
