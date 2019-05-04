@@ -25,11 +25,11 @@ def create_app(env=None):
     def error(e):
         return jsonify(e.data), 400
 
-		@app.route('/test')
-		@accepts(dict(name='foo', type=int))
-		def test():
-				print('foo = ', request.parsed_args.get('foo'))
-				return 'success'
+    @app.route('/test')
+    @accepts(dict(name='foo', type=int))
+    def test():
+        print('foo = ', request.parsed_args.get('foo'))
+        return 'success'
 
     return app
 
