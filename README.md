@@ -23,6 +23,10 @@ def create_app(env=None):
     @app.route('/')
     def health():
         return jsonify('healthy')
+
+    @app.errorhandler(400)
+    def error(e):
+        return jsonify(e.data), 400
     return app
 
 
@@ -30,10 +34,11 @@ app = create_app()
 
 
 @app.route('/test')
-@accepts(dict(name='foo', type=int, help='An important foo'))
+@accepts(dict(name='foo', type=int))
 def test():
     print('foo = ', request.parsed_args.get('foo'))
     return 'success'
+
 
 print('Example with valid int param foo=3')
 with app.test_client() as cl:
@@ -46,4 +51,19 @@ print('Example with invalid int param foo="baz"')
 with app.test_client() as cl:
     resp = cl.get('/test?foo=baz')
     print('Status: ', resp.status_code)
+    print('Content: ', resp.get_json())
+```
+
+Output:
+
+```
+Example with valid int param foo=3
+foo =  3
+Status:  200
+
+==========
+
+Example with invalid int param foo="baz"
+Status:  400
+Content:  {'message': {'foo': "invalid literal for int() with base 10: 'baz'"}}
 ```
