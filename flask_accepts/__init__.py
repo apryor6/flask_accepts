@@ -1,1 +1,2 @@
-from flask_accepts.decorators import accepts, responds  # noqa
+from .decorators import accepts, responds  # noqa
+from .utils import for_swagger  # noqa

@@ -1,25 +1,22 @@
-```
+'''
 curl http://localhost:5000/widget?bla=1
 {
     "baz": 3,
     "foo": "test"
 }
-```
 
-```
 curl -d '{"foo":"hey", "baz": 1}' http://localhost:5000/widget?bla=1 -H 'Content-Type: application/json'
 {
   "baz": 1, 
   "foo": "hey"
 }
-```
+'''
 
 from flask_marshmallow import Marshmallow
 from flask import Flask, jsonify, request
 from flask_accepts import accepts, responds
 from flask_restplus import Namespace, Api, Resource, fields
 from marshmallow import post_load
-
 api = Api(title='test', version='0.0.0', description='A test API')
 ma = Marshmallow()
 

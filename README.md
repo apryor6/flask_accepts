@@ -8,7 +8,7 @@ parser.add_argument(name='baz')
 args = parser.parse_args()
 ```
 
-So I made `flask_accepts`, which allows you to decorate an endpoint with just the input parameter information and it will internally parse those arguments and attach the results to the Flask `request` object in `request.parsed_args`
+So I made `flask_accepts`, which allows you to decorate an endpoint with just the input parameter information and it will internally parse those arguments and attach the results to the Flask `request` object in `request.parsed_args`. It will also automatically add the Swagger integrations from `Flask-RESTplus` where possible without you have to explicitly add the `@api.expect` decorator. This includes supporting Swagger even if you provided a Marshmallow schema -- the type mapping is handled internally.
 
 Here is an example (first `pip install flask_accepts`)
 
@@ -114,3 +114,7 @@ def create_app(env=None):
 
     return app
 ```
+
+## Automatic Swagger documentation
+
+The `accepts` decorator will automatically enable Swagger by internally adding the `@api.expects` decorator. If you have provided positional arguments to `accepts`, this involves generating the corresponding `api.parser()` (which is a `reqparse.RequestParser` that includes the Swagger context). If you provide a Marshmallow Schema, an equivalent `api.model` is generated and passed to `@api.expect`. _Note that at this time, `flask_accepts` can only generate Swagger input documentation for one or the other. The functionality for input validation will work if you provide both, but the Swagger documentation only shows one, prioritizing `schema`, if present._
