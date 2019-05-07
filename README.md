@@ -74,6 +74,9 @@ of a request, and the result will be stored in the Flask request object at `requ
 
 For `responds`, the schema will be used to dump the returned value from the decorated function. Note that this means you should return the _object_ you want to serialize. You need not interact directly with the schema in any way other than passing it in the decorator.
 
+For both decorators, you can pass `many=True` to the decorator, which will pass that
+along to the schema.
+
 ```python
 class Widget:
     def __init__(self, foo: str, baz: int):

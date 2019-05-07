@@ -1,7 +1,7 @@
 from flask_accepts.utils import for_swagger
 
 
-def accepts(*args, schema=None, api=None, use_swagger=True):
+def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
     """
     Wrap a Flask route with input validation
 
@@ -43,7 +43,7 @@ def accepts(*args, schema=None, api=None, use_swagger=True):
 
             # Handle Marshmallow schema
             if schema:
-                obj, err = schema().load(request.get_json())
+                obj, err = schema(many=many).load(request.get_json())
                 if err:
                     error.data['message'].update({'schema_errors': err})
                 request.parsed_obj = obj
@@ -64,14 +64,14 @@ def accepts(*args, schema=None, api=None, use_swagger=True):
     return decorator
 
 
-def responds(*args, schema=None):
+def responds(*args, schema=None, many=False):
     from functools import wraps
 
     def decorator(func):
         @wraps(func)
         def inner(*args, **kwargs):
             rv = func(*args, **kwargs)
-            return schema().dump(rv)
+            return schema(many=many).dump(rv)
         return inner
     return decorator
 
