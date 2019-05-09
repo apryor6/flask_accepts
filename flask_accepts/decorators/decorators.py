@@ -38,16 +38,15 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
             # Handle arguments
             try:
                 request.parsed_args = _parser.parse_args()
+                print('request.parsed_args = ', request.parsed_args)
             except Exception as e:
                 error = e
-
             # Handle Marshmallow schema
             if schema:
                 obj, err = schema(many=many).load(request.get_json())
                 if err:
                     error.data['message'].update({'schema_errors': err})
                 request.parsed_obj = obj
-
             # If any parsing produced an error, combine them and re-raise
             if error:
                 raise(error)
