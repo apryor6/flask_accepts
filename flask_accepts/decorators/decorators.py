@@ -34,7 +34,7 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
         @wraps(func)
         def inner(*args, **kwargs):
             from flask import request
-            error = {}
+            error = None
             # Handle arguments
             try:
                 request.parsed_args = _parser.parse_args()
@@ -45,7 +45,11 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
             if schema:
                 obj, err = schema(many=many).load(request.get_json())
                 if err:
-                    error.data['message'].update({'schema_errors': err})
+                    error = error or ValueError('Invalid parsing error.')
+                    if hasattr(error, 'data'):
+                        error.data['message'].update({'schema_errors': err})
+                    else:
+                        error.data = {'schema_errors': err}
                 request.parsed_obj = obj
             # If any parsing produced an error, combine them and re-raise
             if error:
@@ -56,7 +60,8 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
         # Add Swagger. Currently this supports schema OR reqparse args, but not both
         if api and use_swagger and _IS_METHOD:
             if schema:
-                inner = api.expect(for_swagger(schema=schema, api=api))(inner)
+                inner = wraps(inner)(api.expect(
+                    for_swagger(schema=schema, api=api))(inner))
             elif _parser:
                 inner = api.expect(_parser)(inner)
         return inner

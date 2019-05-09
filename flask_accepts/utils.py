@@ -1,6 +1,7 @@
 from flask_restplus import fields as fr
 from marshmallow import fields as ma
 from marshmallow.schema import Schema, SchemaMeta
+import uuid
 
 
 def unpack_list(val, api):
@@ -25,10 +26,13 @@ def for_swagger(schema, api):
     Returns:
         api.model: An equivalent api.model
     """
+    print('FOR SWAGGER schema = ', schema)
+    print('FOR SWAGGER api = ', api)
     fields = {k: map_type(v, api) for k, v in
               vars(schema()).get('declared_fields', {}).items()
               if type(v) in type_map}
-    return api.model(api.name, fields)
+    print('FOR SWAGGER FIELDS = ', fields)
+    return api.model(str(uuid.uuid4()), fields)
 
 
 type_map = {
