@@ -26,17 +26,15 @@ def for_swagger(schema, api):
     Returns:
         api.model: An equivalent api.model
     """
-    print('FOR SWAGGER schema = ', schema)
-    print('FOR SWAGGER api = ', api)
     fields = {k: map_type(v, api) for k, v in
               vars(schema()).get('declared_fields', {}).items()
               if type(v) in type_map}
-    print('FOR SWAGGER FIELDS = ', fields)
     return api.model(str(uuid.uuid4()), fields)
 
 
 type_map = {
     ma.Integer: lambda x, _: fr.Integer(),
+    ma.Number: lambda x, _: fr.Float(),
     ma.Float: lambda x, _: fr.Float(),
     ma.String: lambda x, _: fr.String(),
     ma.List: unpack_list,
