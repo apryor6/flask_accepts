@@ -26,7 +26,7 @@ def create_app(env=None):
         return jsonify(e.data), 400
 
     @app.route('/test')
-    @accepts(dict(name='foo', type=int))
+    @accepts(dict(name='foo', type=int), api=api)
     def test():
         print('foo = ', request.parsed_args.get('foo'))
         return 'success'
@@ -67,7 +67,7 @@ Content:  {'message': {'foo': "invalid literal for int() with base 10: 'baz'"}}
 ## Usage with Marshmallow schemas
 
 Both the `accepts` and `responds` decorators will accept a keyword argument `schemas` that
-is a Marshmallow Schema.
+is a Marshmallow Schema. You also provide the `api` namespace that you would like the Swagger documentation to be attached to. Under-the-hood, `flask_accepts` will handle conversion of the provided Marshmallow schema to an equivalent Flask-RESTplus `api.Model`, giving you the powerful control of Marshmallow combined with the awesomness of Swagger.
 
 For `accepts`, the schema will be used to parse the JSON body
 of a request, and the result will be stored in the Flask request object at `request.parsed_obj`. Note that this input is the _class_ of the schema, not an object of it. The object creation is handled internally. You can use the `post_load` decorator to control exactly what object is returned when the `load` method of the schema is called. See [here](https://marshmallow.readthedocs.io/en/3.0/extending.html) for more information.
@@ -109,7 +109,7 @@ def create_app(env=None):
         return request.parsed_obj
 
     @app.route('/make_a_widget', methods=['POST'])
-    @accepts(dict(name='arg', type=int), schema=WidgetSchema)
+    @accepts(dict(name='arg', type=int), schema=WidgetSchema, api=api)
     def post():
         print(request.parsed_args)
         print(request.parsed_obj)
