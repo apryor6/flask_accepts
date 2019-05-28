@@ -24,9 +24,13 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
         _parser = api.parser()
     else:
         _parser = reqparse.RequestParser(bundle_errors=True)
-    for arg in args:
-        if isinstance(arg, dict):
-            _parser.add_argument(**arg, location='values')
+
+    query_params = [arg for arg in args if isinstance(arg, dict)]
+    for qp in query_params:
+        _parser.add_argument(**qp, location='values')
+    # for arg in args:
+        # if isinstance(arg, dict):
+        # _parser.add_argument(**arg, location='values')
 
     def decorator(func):
         from functools import wraps
@@ -60,8 +64,10 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
         # Add Swagger. Currently this supports schema OR reqparse args, but not both
         if api and use_swagger and _IS_METHOD:
             if schema:
-                inner = wraps(inner)(api.expect(
-                    for_swagger(schema=schema, api=api))(inner))
+                inner = api.doc(
+                    params={qp['name']: qp for qp in query_params},
+                    body=for_swagger(
+                        schema=schema, api=api))(inner)
             elif _parser:
                 inner = api.expect(_parser)(inner)
         return inner
