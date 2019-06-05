@@ -1,3 +1,5 @@
+from werkzeug.wrappers.response import Response
+
 from flask_accepts.utils import for_swagger
 
 
@@ -81,6 +83,10 @@ def responds(*args, schema=None, many=False):
         @wraps(func)
         def inner(*args, **kwargs):
             rv = func(*args, **kwargs)
+
+            # If a Flask response has been made already, it is passed through unchanged
+            if isinstance(rv, Response):
+                return rv
             return schema(many=many).dump(rv)
         return inner
     return decorator
