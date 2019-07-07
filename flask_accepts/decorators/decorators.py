@@ -1,4 +1,4 @@
-from werkzeug.wrappers.response import Response
+from werkzeug.wrappers import Response
 
 from flask_accepts.utils import for_swagger
 
@@ -19,7 +19,13 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
     Returns:
         The wrapped route
     """
-    from flask_restful import reqparse
+    try:
+        from flask_restplus import reqparse
+    except ImportError:
+        try:
+            from flask_restful import reqparse
+        except ImportError as e:
+            raise e
 
     # If an api was passed in, we need to use its parser so Swagger is aware
     if api:
