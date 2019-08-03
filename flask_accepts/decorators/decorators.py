@@ -3,9 +3,10 @@ from werkzeug.wrappers import Response
 from flask_accepts.utils import for_swagger
 
 
-def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
+def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool = True):
     """
-    Wrap a Flask route with input validation
+    Wrap a Flask route with input validation using a combination of reqparse from
+    Flask-RESTplus and/or Marshmallow schemas
 
     Args:
         *args: any number of dictionaries containing parameters to pass to
@@ -35,54 +36,73 @@ def accepts(*args, schema=None, many=False, api=None, use_swagger=True):
 
     query_params = [arg for arg in args if isinstance(arg, dict)]
     for qp in query_params:
-        _parser.add_argument(**qp, location='values')
-    # for arg in args:
-        # if isinstance(arg, dict):
-        # _parser.add_argument(**arg, location='values')
+        _parser.add_argument(**qp, location="values")
 
     def decorator(func):
         from functools import wraps
+
+        # Check if we are decorating a class method
         _IS_METHOD = _is_method(func)
+
         @wraps(func)
         def inner(*args, **kwargs):
             from flask import request
+
             error = None
             # Handle arguments
             try:
                 request.parsed_args = _parser.parse_args()
-                print('request.parsed_args = ', request.parsed_args)
+                print("request.parsed_args = ", request.parsed_args)
             except Exception as e:
                 error = e
+
             # Handle Marshmallow schema
             if schema:
                 obj, err = schema(many=many).load(request.get_json())
                 if err:
-                    error = error or ValueError('Invalid parsing error.')
-                    if hasattr(error, 'data'):
-                        error.data['message'].update({'schema_errors': err})
+                    error = error or ValueError("Invalid parsing error.")
+                    if hasattr(error, "data"):
+                        error.data["message"].update({"schema_errors": err})
                     else:
-                        error.data = {'schema_errors': err}
+                        error.data = {"schema_errors": err}
                 request.parsed_obj = obj
+
             # If any parsing produced an error, combine them and re-raise
             if error:
-                raise(error)
+                raise (error)
 
             return func(*args, **kwargs)
 
-        # Add Swagger. Currently this supports schema OR reqparse args, but not both
+        # Add Swagger
         if api and use_swagger and _IS_METHOD:
             if schema:
                 inner = api.doc(
-                    params={qp['name']: qp for qp in query_params},
-                    body=for_swagger(
-                        schema=schema, api=api))(inner)
+                    params={qp["name"]: qp for qp in query_params},
+                    body=for_swagger(schema=schema, api=api),
+                )(inner)
             elif _parser:
                 inner = api.expect(_parser)(inner)
         return inner
+
     return decorator
 
 
-def responds(*args, schema=None, many=False):
+def responds(*args, schema=None, many: bool = False):
+    """
+    Serialize the output of a function using the Marshmallow schema to dump the results.
+    Note that `schema` should be the type, not an instance -- the `responds` decorator
+    will internally handle creation of the schema. If the outputted value is already of 
+    type flask.Response, it will be passed along without further modification.
+    
+    Args:
+        schema (bool, optional): Marshmallow schema with which to serialize the output
+            of the wrapped function.
+        many (bool, optional): The Marshmallow schema `many` parameter, which will
+            return a list of the corresponding schema objects when set to True.
+    
+    Returns:
+        The output of schema(many=many).dumps(<return value>) of the wrapped function
+    """
     from functools import wraps
 
     def decorator(func):
@@ -94,7 +114,9 @@ def responds(*args, schema=None, many=False):
             if isinstance(rv, Response):
                 return rv
             return schema(many=many).dump(rv)
+
         return inner
+
     return decorator
 
 
@@ -104,5 +126,6 @@ def _is_method(func):
     ASSUMES YOU ARE USING THE CONVENTION THAT FIRST ARG IS 'self'
     """
     import inspect
+
     sig = inspect.signature(func)
-    return 'self' in sig.parameters
+    return "self" in sig.parameters
