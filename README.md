@@ -54,6 +54,7 @@ Output:
 
 ```
 Example with valid int param foo=3
+request.parsed_args =  {'foo': 3}
 foo =  3
 Status:  200
 
@@ -61,7 +62,7 @@ Status:  200
 
 Example with invalid int param foo="baz"
 Status:  400
-Content:  {'message': {'foo': "invalid literal for int() with base 10: 'baz'"}}
+Content:  {'errors': {'foo': "invalid literal for int() with base 10: 'baz'"}, 'message': 'Input payload validation failed'}
 ```
 
 ## Usage with Marshmallow schemas
@@ -74,10 +75,16 @@ of a request, and the result will be stored in the Flask request object at `requ
 
 For `responds`, the schema will be used to dump the returned value from the decorated function. Note that this means you should return the _object_ you want to serialize. You need not interact directly with the schema in any way other than passing it in the decorator.
 
-For both decorators, you can pass `many=True` to the decorator, which will pass that
-along to the schema.
+For both decorators, you can pass `many=True` to the decorator, which will pass that along to the schema.
+
+The following example includes examples of both Flask-RESTplus style endpoints with a Resource class containing REST methods as well as a "vanilla" Flask endpoint, which is just a function.
 
 ```python
+from marshmallow import fields, Schema, post_load
+from flask import Flask, jsonify, request
+from flask_accepts import accepts, responds
+
+
 class Widget:
     def __init__(self, foo: str, baz: int):
         self.foo = foo
@@ -87,9 +94,9 @@ class Widget:
         return f"<Widget(foo='{self.foo}', baz={self.baz})>"
 
 
-class WidgetSchema(ma.Schema):
-    foo = ma.String(100)
-    baz = ma.Integer()
+class WidgetSchema(Schema):
+    foo = fields.String(100)
+    baz = fields.Integer()
 
     @post_load
     def make(self, kwargs):
@@ -97,25 +104,34 @@ class WidgetSchema(ma.Schema):
 
 
 def create_app(env=None):
-    app = Flask(__name__)
-    ma.init_app(app)
-    @app.errorhandler(400)
-    def error(e):
-        return jsonify(e.data), 400
+    from flask_restplus import Api, Namespace, Resource
 
-    @app.route('/get_a_widget', methods=['GET'])
+    app = Flask(__name__)
+    api = Api(app)
+
+    @app.route("/simple/make_a_widget", methods=["POST"])
+    @accepts(schema=WidgetSchema)
     @responds(schema=WidgetSchema)
-    def get():
+    def post():
+        from flask import jsonify
+
         return request.parsed_obj
 
-    @app.route('/make_a_widget', methods=['POST'])
-    @accepts(dict(name='arg', type=int), schema=WidgetSchema, api=api)
-    def post():
-        print(request.parsed_args)
-        print(request.parsed_obj)
-        return jsonify('success')
+    @api.route("/restplus/make_a_widget")
+    class WidgetResource(Resource):
+        @accepts(schema=WidgetSchema, api=api)
+        @responds(schema=WidgetSchema, api=api)
+        def post(self):
+            from flask import jsonify
+
+            return request.parsed_obj
 
     return app
+
+
+app = create_app()
+if __name__ == "__main__":
+    app.run(debug=True)
 ```
 
 ## Automatic Swagger documentation

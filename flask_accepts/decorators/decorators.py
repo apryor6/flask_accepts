@@ -1,3 +1,4 @@
+from flask import jsonify
 from werkzeug.wrappers import Response
 
 from flask_accepts.utils import for_swagger
@@ -14,9 +15,11 @@ def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool 
             will be parsed using the default logic (see https://flask-restful.readthedocs.io/en/0.3.5/reqparse.html#argument-locations);
             however, if a schema is provided then the JSON body is assumed to correspond
             to it and will not be parsed for query params
-        schema ([type], optional): A Marshmallow Schema that will be used to parse JSON
+        schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse JSON
             data from the request body and store in request.parsed_bj. Defaults to None.
-
+        many (bool, optional): The Marshmallow schema `many` parameter, which will
+            return a list of the corresponding schema objects when set to True.
+    
     Returns:
         The wrapped route
     """
@@ -52,7 +55,6 @@ def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool 
             # Handle arguments
             try:
                 request.parsed_args = _parser.parse_args()
-                print("request.parsed_args = ", request.parsed_args)
             except Exception as e:
                 error = e
 
@@ -87,7 +89,7 @@ def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool 
     return decorator
 
 
-def responds(*args, schema=None, many: bool = False):
+def responds(*args, schema=None, many: bool = False, api=None):
     """
     Serialize the output of a function using the Marshmallow schema to dump the results.
     Note that `schema` should be the type, not an instance -- the `responds` decorator
@@ -113,7 +115,11 @@ def responds(*args, schema=None, many: bool = False):
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
-            return schema(many=many).dump(rv)
+            serialized = schema(many=many).dump(rv).data
+            if not _is_method(func):
+                # Regular route, need to manually create Response
+                return jsonify(serialized)
+            return serialized
 
         return inner
 
