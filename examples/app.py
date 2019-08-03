@@ -1,35 +1,57 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request
 from flask_accepts import accepts
+from flask_restplus import Api, Namespace, Resource
+from marshmallow import Schema, fields
 
 
-# def create_app(env=None):
+class TestSchema(Schema):
+    id = fields.Integer(attribute="id")
+
+
+class HigherSchema(Schema):
+    id = fields.Integer(attribute="id")
+    _list = fields.List(fields.Integer())
+    test = fields.Nested(TestSchema, attribute="test")
+    list_nested = fields.List(fields.Nested(TestSchema))
+
+
+o = {"id": 1}
+
 app = Flask(__name__)
-app.config['BUNDLE_ERRORS'] = True
+api = Api(app)
+ns = Namespace("test")
 
 
-@app.errorhandler(400)
-def error(e):
-    return jsonify(e.data), 400
+@ns.route("/")
+class TestResource(Resource):
+    @accepts(
+        dict(name="hey", type=str),
+        dict(name="test", type=int, required=True, default=3),
+        schema=HigherSchema,
+        api=api,
+    )
+    def post(self):
+        print(request.parsed_obj)
+        print(request.parsed_args)
+        return "Hello world"
+
+    @accepts(
+        dict(name="hey", type=str),
+        dict(name="test", type=int, required=True, default=3),
+        api=api,
+    )
+    def get(self):
+        print(request.parsed_args)
+        return "Hello world"
+
+    @accepts(schema=HigherSchema, api=api)
+    def put(self):
+        print(request.parsed_obj)
+        print(request.parsed_args)
+        return "Hello world"
 
 
-@app.route('/', methods=['GET'])
-@accepts(dict(name='foo', type=int), dict(name='baz', type=float))
-def test():
-    return jsonify(request.parsed_args)
+api.add_namespace(ns)
 
-
-with app.test_client() as cl:
-    resp = cl.get('/test?foo=3')
-    print('Status: ', resp.status_code)
-    print('Return: ', resp.get_json())
-print('\n==========\n')
-
-print('Example with invalid int param foo="baz"')
-with app.test_client() as cl:
-    resp = cl.get('/test?foo=baz', headers={'Content-Type': 'appliation/json'})
-    print('Status: ', resp.status_code)
-    print('Return: ', resp.get_json())
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
