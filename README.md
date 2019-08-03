@@ -110,7 +110,7 @@ def create_app(env=None):
     api = Api(app)
 
     @app.route("/simple/make_a_widget", methods=["POST"])
-    @accepts(schema=WidgetSchema)
+    @accepts(dict(name="some_arg", type=str), schema=WidgetSchema)
     @responds(schema=WidgetSchema)
     def post():
         from flask import jsonify
@@ -119,7 +119,7 @@ def create_app(env=None):
 
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
-        @accepts(schema=WidgetSchema, api=api)
+        @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
         @responds(schema=WidgetSchema, api=api)
         def post(self):
             from flask import jsonify
