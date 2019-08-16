@@ -2,7 +2,7 @@ from flask import request
 from flask_restplus import Resource, Api
 from marshmallow import Schema, fields
 
-from flask_accepts.decorators import accepts
+from flask_accepts.decorators import accepts, responds
 from flask_accepts.test.fixtures import app, client  # noqa
 
 
@@ -77,18 +77,46 @@ def test_validation_errors_added_to_request_with_Resource_and_schema(
             api=api,
         )
         def post(self):
-            assert request.parsed_obj
-            assert request.parsed_obj["_id"] == 42
-            assert request.parsed_obj["name"] == "test name"
-            return "success"
+            pass  # pragma: no cover
 
     with client as cl:
         resp = cl.post(
             "/test?foo=3",
             json={"_id": "this is not an integer and will error", "name": "test name"},
         )
-        assert resp.status_code == 500
+        assert resp.status_code == 400
         assert "Not a valid integer." in resp.json["schema_errors"]["_id"]
+
+
+def test_validation_errors_from_all_added_to_request_with_Resource_and_schema(
+    app, client
+):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            dict(name="foo2", type=int, help="An important foo2"),
+            schema=TestSchema,
+            api=api,
+        )
+        def post(self):
+            pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.post(
+            "/test?foo=not_int",
+            json={"_id": "this is not an integer and will error", "name": "test name"},
+        )
+
+        assert resp.status_code == 400
+        assert "Not a valid integer." in resp.json["errors"]["schema_errors"]["_id"]
 
 
 def test_dict_arguments_are_correctly_added(app, client):  # noqa
@@ -129,3 +157,65 @@ def test_failure_when_arg_is_wrong_type(app, client):  # noqa
     with client as cl:
         resp = cl.get("/test?foo=baz")
         assert resp.status_code == 400
+
+
+def test_responds(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api)
+        def get(self):
+            obj = {"_id": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert obj["_id"] == 42
+        assert obj["name"] == "Jon Snow"
+
+
+def test_responds_regular_route(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    @app.route("/test", methods=["GET"])
+    @responds(schema=TestSchema)
+    def get():
+        obj = {"_id": 42, "name": "Jon Snow"}
+        return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert obj["_id"] == 42
+        assert obj["name"] == "Jon Snow"
+
+
+def test_responds_passes_raw_responses_through_untouched(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api)
+        def get(self):
+            from flask import make_response, Response
+
+            obj = {"_id": 42, "name": "Jon Snow"}
+            # return make_response({"message": "test"}, 201)
+            return Response("A prebuild response that won't be serialised", 201)
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 201
+

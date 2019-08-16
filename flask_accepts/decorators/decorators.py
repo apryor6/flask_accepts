@@ -1,5 +1,6 @@
 from flask import jsonify
 from werkzeug.wrappers import Response
+from werkzeug.exceptions import BadRequest
 from marshmallow import Schema
 
 from flask_accepts.utils import for_swagger
@@ -78,9 +79,9 @@ def accepts(
             if schema:
                 obj, err = schema(many=many).load(request.get_json())
                 if err:
-                    error = error or ValueError(f"Invalid parsing error: {err}")
+                    error = error or BadRequest(f"Invalid parsing error: {err}")
                     if hasattr(error, "data"):
-                        error.data["message"].update({"schema_errors": err})
+                        error.data["errors"].update({"schema_errors": err})
                     else:
                         error.data = {"schema_errors": err}
                 request.parsed_obj = obj
