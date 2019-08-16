@@ -121,7 +121,7 @@ def create_app(env=None):
 
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
-        @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
+        @accepts("Widget", dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
         @responds(schema=WidgetSchema, api=api)
         def post(self):
             from flask import jsonify
@@ -139,3 +139,23 @@ if __name__ == "__main__":
 ## Automatic Swagger documentation
 
 The `accepts` decorator will automatically enable Swagger by internally adding the `@api.expects` decorator. If you have provided positional arguments to `accepts`, this involves generating the corresponding `api.parser()` (which is a `reqparse.RequestParser` that includes the Swagger context). If you provide a Marshmallow Schema, an equivalent `api.model` is generated and passed to `@api.expect`. These two can be mixed-and-matched, and the documentation will update accordingly.
+
+### Defining the model name
+
+Under-the-hood, `flask_accepts` translates and combines the provided dictionaries and/or Marshmallow schema into a single `api.Model`. The name of this model can be set either as a positional string argument or via the keyword argument `model_name` to the `@accepts` decorator. See the above example for the "Widget" model. This could also be written with keyword arguments as:
+
+```python
+    @api.route("/restplus/make_a_widget")
+    class WidgetResource(Resource):
+        @accepts(
+            dict(name="some_arg", type=str),
+            model_name="Widget",
+            schema=WidgetSchema,
+            api=api,
+        )
+        @responds(schema=WidgetSchema, api=api)
+        def post(self):
+            from flask import jsonify
+
+            return request.parsed_obj
+```
