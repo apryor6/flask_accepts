@@ -162,3 +162,43 @@ class WidgetResource(Resource):
         from flask import jsonify
         return request.parsed_obj
 ```
+
+### Error handling
+
+`flask_accepts` will unify/bundle errors for the underlying reqparse and/or Marshmallow schema errors into a single 400 response upon validation errors. The payload contains an "errors" object with one key for each parameter that was not valid with the value of that key being the error message. There is one special key, `schema_errors` that will contain the nested output of the errors for schema validation with Marshmallow. Here is an example of a  full error object followed by a test that produced this output.
+
+
+```json
+{
+  "errors": {
+    "foo": "An important foo invalid literal for int() with base 10: 'not_int'",
+    "schema_errors": { "_id": ["Not a valid integer."] }
+  },
+  "message": "Input payload validation failed"
+}
+```
+
+```python
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            dict(name="foo2", type=int, help="An important foo2"),
+            schema=TestSchema,
+            api=api,
+        )
+        def post(self):
+            pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.post(
+            "/test?foo=not_int",
+            json={"_id": "this is not an integer and will error", "name": "test name"},
+        )
+
+        assert resp.status_code == 400
+        assert "Not a valid integer." in resp.json["errors"]["schema_errors"]["_id"]
+```
+
+
