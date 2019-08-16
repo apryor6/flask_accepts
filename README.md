@@ -16,59 +16,33 @@ So I made `flask_accepts`, which allows you to decorate an endpoint with just th
 
 The core of the library are two decorators, `@accepts` and `@responds`. The `@accepts` decorators defines what parameters or schemas the endpoint accepts, returning errors if the inputs fail validation, and `@responds` defines what schema should be used to serialize the output. This makes it easy to create a serialization layer on your API outputs without having to write a lot of extra code.
 
-Here is an example (first `pip install flask_accepts`)
+### Installation
+
+Simple, `pip install flask_accepts`
+
+### Usage
+
+Here is a basic example of an endpoint that makes and returns a new Widget
 
 
 ```python
 from flask import Flask, jsonify, request
 from flask_accepts import accepts
 
+from .widget import Widget, WidgetSchema, make_widget
 
 def create_app(env=None):
     app = Flask(__name__)
 
-    @app.errorhandler(400)
-    def error(e):
-        return jsonify(e.data), 400
-
-    @app.route('/test')
+    @app.route('/widget')
     @accepts(dict(name='foo', type=int), api=api)
-    def test():
-        print('foo = ', request.parsed_args.get('foo'))
-        return 'success'
-
+	@responds(schema=WidgetSchema, api=api)
+    def widget():
+		name: str = request.parsed_args['foo]
+		widget: Widget = make_widget(name)
+		return widget
+        
     return app
-
-
-app = create_app()
-
-print('Example with valid int param foo=3')
-with app.test_client() as cl:
-    resp = cl.get('/test?foo=3')
-    print('Status: ', resp.status_code)
-
-print('\n==========\n')
-
-print('Example with invalid int param foo="baz"')
-with app.test_client() as cl:
-    resp = cl.get('/test?foo=baz')
-    print('Status: ', resp.status_code)
-    print('Content: ', resp.get_json())
-```
-
-Output:
-
-```
-Example with valid int param foo=3
-request.parsed_args =  {'foo': 3}
-foo =  3
-Status:  200
-
-==========
-
-Example with invalid int param foo="baz"
-Status:  400
-Content:  {'errors': {'foo': "invalid literal for int() with base 10: 'baz'"}, 'message': 'Input payload validation failed'}
 ```
 
 ## Usage with Marshmallow schemas
