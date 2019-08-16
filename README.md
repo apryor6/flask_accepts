@@ -1,8 +1,8 @@
 [![codecov](https://codecov.io/gh/apryor6/flask_accepts/branch/master/graph/badge.svg)](https://codecov.io/gh/apryor6/flask_accepts)
 [![license](https://img.shields.io/github/license/apryor6/flask_accepts)](https://img.shields.io/github/license/apryor6/flask_accepts)
 
-
 # flask_accepts
+
 I love `reqparse` from `Flask-RESTplus` for input validation, but I got sick of writing code like this in every endpoint:
 
 ```
@@ -26,7 +26,6 @@ Simple, `pip install flask_accepts`
 
 Here is a basic example of an endpoint that makes and returns a new Widget
 
-
 ```python
 from flask import Flask, request
 from flask_accepts import accepts, responds
@@ -43,7 +42,7 @@ def create_app():
 	name: str = request.parsed_args["foo"]
 	widget: Widget = make_widget(name)
 	return widget
-        
+
     return app
 ```
 
@@ -122,7 +121,24 @@ The `accepts` decorator will automatically enable Swagger by internally adding t
 
 ### Defining the model name
 
-Under-the-hood, `flask_accepts` translates and combines the provided dictionaries and/or Marshmallow schema into a single `api.Model`. The name of this model can be set either as a positional string argument or via the keyword argument `model_name` to the `@accepts` decorator. See the above example for the "Widget" model. This could also be written with keyword arguments as:
+Under-the-hood, `flask_accepts` translates and combines the provided dictionaries and/or Marshmallow schema into a single `api.Model`. The name of this model can be set either as a positional string argument or via the keyword argument `model_name` to the `@accepts` decorator.
+
+```python
+@api.route("/restplus/make_a_widget")
+class WidgetResource(Resource):
+    @accepts(
+		"Widget"
+        dict(name="some_arg", type=str),
+        schema=WidgetSchema,
+        api=api,
+    )
+    @responds(schema=WidgetSchema, api=api)
+    def post(self):
+        from flask import jsonify
+        return request.parsed_obj
+```
+
+This could also be written with keyword arguments as:
 
 ```python
 @api.route("/restplus/make_a_widget")
@@ -141,8 +157,7 @@ class WidgetResource(Resource):
 
 ### Error handling
 
-`flask_accepts` will unify/bundle errors for the underlying reqparse and/or Marshmallow schema errors into a single 400 response upon validation errors. The payload contains an "errors" object with one key for each parameter that was not valid with the value of that key being the error message. There is one special key, `schema_errors` that will contain the nested output of the errors for schema validation with Marshmallow. Here is an example of a  full error object followed by a test that produced this output.
-
+`flask_accepts` will unify/bundle errors for the underlying reqparse and/or Marshmallow schema errors into a single 400 response upon validation errors. The payload contains an "errors" object with one key for each parameter that was not valid with the value of that key being the error message. There is one special key, `schema_errors` that will contain the nested output of the errors for schema validation with Marshmallow. Here is an example of a full error object followed by a test that produced this output.
 
 ```json
 {
@@ -176,5 +191,3 @@ class WidgetResource(Resource):
         assert resp.status_code == 400
         assert "Not a valid integer." in resp.json["errors"]["schema_errors"]["_id"]
 ```
-
-
