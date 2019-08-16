@@ -34,8 +34,8 @@ from .widget import Widget, WidgetSchema, make_widget
 def create_app(env=None):
     app = Flask(__name__)
 
-    @app.route('/widget')
-    @accepts(dict(name='foo', type=str), api=api)
+    @app.route("/widget")
+    @accepts(dict(name="foo", type=str), api=api)
     @responds(schema=WidgetSchema, api=api)
     def widget():
 	name: str = request.parsed_args["foo"]
