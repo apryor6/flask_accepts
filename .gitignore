@@ -122,3 +122,4 @@ misc/
 venv/
 
 bundle.cmd
+codecov.sh
