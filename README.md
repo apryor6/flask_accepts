@@ -1,4 +1,8 @@
-#	flask_accepts
+[![codecov](https://codecov.io/gh/apryor6/flask_accepts/branch/master/graph/badge.svg)](https://codecov.io/gh/apryor6/flask_accepts)
+[![license](https://img.shields.io/github/license/apryor6/flask_accepts)](https://img.shields.io/github/license/apryor6/flask_accepts)
+
+
+# flask_accepts
 I love `reqparse` from `Flask-RESTful` for input validation, but I got sick of writing code like this in every endpoint:
 
 ```
