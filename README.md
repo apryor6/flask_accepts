@@ -3,7 +3,7 @@
 
 
 # flask_accepts
-I love `reqparse` from `Flask-RESTful` for input validation, but I got sick of writing code like this in every endpoint:
+I love `reqparse` from `Flask-RESTplus` for input validation, but I got sick of writing code like this in every endpoint:
 
 ```
 parser = reqparse.RequestParser()
