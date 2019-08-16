@@ -31,7 +31,7 @@ from flask_accepts import accepts, responds
 
 from .widget import Widget, WidgetSchema, make_widget
 
-def create_app(env=None):
+def create_app():
     app = Flask(__name__)
 
     @app.route("/widget")
