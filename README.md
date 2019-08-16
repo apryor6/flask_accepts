@@ -124,6 +124,7 @@ The `accepts` decorator will automatically enable Swagger by internally adding t
 Under-the-hood, `flask_accepts` translates and combines the provided dictionaries and/or Marshmallow schema into a single `api.Model`. The name of this model can be set either as a positional string argument or via the keyword argument `model_name` to the `@accepts` decorator.
 
 ```python
+
 @api.route("/restplus/make_a_widget")
 class WidgetResource(Resource):
     @accepts(
@@ -152,6 +153,7 @@ class WidgetResource(Resource):
     @responds(schema=WidgetSchema, api=api)
     def post(self):
         from flask import jsonify
+
         return request.parsed_obj
 ```
 
