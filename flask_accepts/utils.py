@@ -17,11 +17,11 @@ def unpack_nested(val, api):
 
 def for_swagger(schema, api, model_name=None):
     """
-    Convert a marshmallow schema to equivalent Flask-RESTful model
+    Convert a marshmallow schema to equivalent Flask-RESTplus model
 
     Args:
         schema (Marshmallow Schema): Schema defining the inputs
-        api (Namespace): Flask-RESTful namespace (necessary for context)
+        api (Namespace): Flask-RESTplus namespace (necessary for context)
 
     Returns:
         api.model: An equivalent api.model
