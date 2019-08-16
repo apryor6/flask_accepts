@@ -1,4 +1,6 @@
 from flask import request
+from flask_restplus import Resource, Api
+from marshmallow import Schema, fields
 
 from flask_accepts.decorators import accepts
 from flask_accepts.test.fixtures import app, client  # noqa
@@ -6,13 +8,54 @@ from flask_accepts.test.fixtures import app, client  # noqa
 
 def test_arguments_are_added_to_request(app, client):  # noqa
     @app.route("/test")
-    @accepts(dict(name="foo", type=int, help="An important foo"))
+    @accepts("Foo", dict(name="foo", type=int, help="An important foo"))
     def test():
         assert request.parsed_args
         return "success"
 
     with client as cl:
         resp = cl.get("/test?foo=3")
+        assert resp.status_code == 200
+
+
+def test_arguments_are_added_to_request_with_Resource(app, client):  # noqa
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("Foo", dict(name="foo", type=int, help="An important foo"), api=api)
+        def get(self):
+            assert request.parsed_args
+            return "success"
+
+    with client as cl:
+        resp = cl.get("/test?foo=3")
+        assert resp.status_code == 200
+
+
+def test_arguments_are_added_to_request_with_Resource_and_schema(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            schema=TestSchema,
+            api=api,
+        )
+        def post(self):
+            assert request.parsed_obj
+            assert request.parsed_obj["_id"] == 42
+            assert request.parsed_obj["name"] == "test name"
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test?foo=3", json={"_id": 42, "name": "test name"})
         assert resp.status_code == 200
 
 

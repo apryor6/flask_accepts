@@ -35,7 +35,7 @@ def accepts(
     """
     try:
         from flask_restplus import reqparse
-    except ImportError:
+    except ImportError:  # pragma: no cover
         try:
             from flask_restful import reqparse
         except ImportError as e:
