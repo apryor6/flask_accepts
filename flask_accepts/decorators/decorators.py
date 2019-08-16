@@ -1,20 +1,30 @@
 from flask import jsonify
 from werkzeug.wrappers import Response
+from marshmallow import Schema
 
 from flask_accepts.utils import for_swagger
 
 
-def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool = True):
+def accepts(
+    *args,
+    model_name: str = None,
+    schema: Schema = None,
+    many: bool = False,
+    api=None,
+    use_swagger: bool = True
+):
     """
     Wrap a Flask route with input validation using a combination of reqparse from
     Flask-RESTplus and/or Marshmallow schemas
 
     Args:
         *args: any number of dictionaries containing parameters to pass to
-            reqparse.RequestParser().add_argument(). By default these parameters
+            reqparse.RequestParser().add_argument(). A single string parameter may also be
+            provided that is used as the model name.  By default these parameters
             will be parsed using the default logic (see https://flask-restful.readthedocs.io/en/0.3.5/reqparse.html#argument-locations);
             however, if a schema is provided then the JSON body is assumed to correspond
             to it and will not be parsed for query params
+        model_name (str): the name to pass to api.Model, can optionally be provided as a str argument to *args
         schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse JSON
             data from the request body and store in request.parsed_bj. Defaults to None.
         many (bool, optional): The Marshmallow schema `many` parameter, which will
@@ -38,6 +48,12 @@ def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool 
         _parser = reqparse.RequestParser(bundle_errors=True)
 
     query_params = [arg for arg in args if isinstance(arg, dict)]
+
+    model_name = model_name
+    for arg in args:  # check for positional string-arg, which is the model name
+        if isinstance(arg, str):
+            model_name = arg
+            break
     for qp in query_params:
         _parser.add_argument(**qp, location="values")
 
@@ -80,7 +96,7 @@ def accepts(*args, schema=None, many: bool = False, api=None, use_swagger: bool 
             if schema:
                 inner = api.doc(
                     params={qp["name"]: qp for qp in query_params},
-                    body=for_swagger(schema=schema, api=api),
+                    body=for_swagger(schema=schema, model_name=model_name, api=api),
                 )(inner)
             elif _parser:
                 inner = api.expect(_parser)(inner)
