@@ -38,9 +38,9 @@ def create_app(env=None):
     @accepts(dict(name='foo', type=str), api=api)
     @responds(schema=WidgetSchema, api=api)
     def widget():
-		name: str = request.parsed_args['foo]
-		widget: Widget = make_widget(name)
-		return widget
+	name: str = request.parsed_args['foo]
+	widget: Widget = make_widget(name)
+	return widget
         
     return app
 ```
