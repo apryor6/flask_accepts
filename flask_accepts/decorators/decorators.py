@@ -1,5 +1,6 @@
 from flask import jsonify
 from werkzeug.wrappers import Response
+from werkzeug.exceptions import BadRequest
 from marshmallow import Schema
 
 from flask_accepts.utils import for_swagger
@@ -11,7 +12,7 @@ def accepts(
     schema: Schema = None,
     many: bool = False,
     api=None,
-    use_swagger: bool = True
+    use_swagger: bool = True,
 ):
     """
     Wrap a Flask route with input validation using a combination of reqparse from
@@ -35,7 +36,7 @@ def accepts(
     """
     try:
         from flask_restplus import reqparse
-    except ImportError:
+    except ImportError:  # pragma: no cover
         try:
             from flask_restful import reqparse
         except ImportError as e:
@@ -78,16 +79,16 @@ def accepts(
             if schema:
                 obj, err = schema(many=many).load(request.get_json())
                 if err:
-                    error = error or ValueError("Invalid parsing error.")
+                    error = error or BadRequest(f"Invalid parsing error: {err}")
                     if hasattr(error, "data"):
-                        error.data["message"].update({"schema_errors": err})
+                        error.data["errors"].update({"schema_errors": err})
                     else:
                         error.data = {"schema_errors": err}
                 request.parsed_obj = obj
 
             # If any parsing produced an error, combine them and re-raise
             if error:
-                raise (error)
+                raise error
 
             return func(*args, **kwargs)
 
