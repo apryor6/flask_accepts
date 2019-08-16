@@ -9,3 +9,8 @@
 0.4.0:
 
 - Enable user to specify the model name with either a positional or keyword argument
+
+0.5.0:
+
+- Validation errors now return a 400 properly instead of a 500
+- Greatly improve test coverage
