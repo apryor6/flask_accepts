@@ -11,7 +11,7 @@ def accepts(
     schema: Schema = None,
     many: bool = False,
     api=None,
-    use_swagger: bool = True
+    use_swagger: bool = True,
 ):
     """
     Wrap a Flask route with input validation using a combination of reqparse from
@@ -78,7 +78,7 @@ def accepts(
             if schema:
                 obj, err = schema(many=many).load(request.get_json())
                 if err:
-                    error = error or ValueError("Invalid parsing error.")
+                    error = error or ValueError(f"Invalid parsing error: {err}")
                     if hasattr(error, "data"):
                         error.data["message"].update({"schema_errors": err})
                     else:
@@ -87,7 +87,7 @@ def accepts(
 
             # If any parsing produced an error, combine them and re-raise
             if error:
-                raise (error)
+                raise error
 
             return func(*args, **kwargs)
 

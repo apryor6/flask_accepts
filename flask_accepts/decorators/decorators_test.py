@@ -59,6 +59,38 @@ def test_arguments_are_added_to_request_with_Resource_and_schema(app, client):  
         assert resp.status_code == 200
 
 
+def test_validation_errors_added_to_request_with_Resource_and_schema(
+    app, client
+):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            schema=TestSchema,
+            api=api,
+        )
+        def post(self):
+            assert request.parsed_obj
+            assert request.parsed_obj["_id"] == 42
+            assert request.parsed_obj["name"] == "test name"
+            return "success"
+
+    with client as cl:
+        resp = cl.post(
+            "/test?foo=3",
+            json={"_id": "this is not an integer and will error", "name": "test name"},
+        )
+        assert resp.status_code == 500
+        assert "Not a valid integer." in resp.json["schema_errors"]["_id"]
+
+
 def test_dict_arguments_are_correctly_added(app, client):  # noqa
     @app.route("/test")
     @accepts(
