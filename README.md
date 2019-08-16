@@ -12,6 +12,8 @@ parser.add_argument(name='baz')
 args = parser.parse_args()
 ```
 
+And I also love Marshmallow, but the two technologies don't really play well together, at least not out-of-the-box.
+
 So I made `flask_accepts`, which allows you to decorate an endpoint with just the input parameter information and it will internally parse those arguments and attach the results to the Flask `request` object in `request.parsed_args`. It will also automatically add the Swagger integrations from `Flask-RESTplus` where possible without you have to explicitly add the `@api.expect` decorator. This includes supporting Swagger even if you provided a Marshmallow schema -- the type mapping is handled internally.
 
 The core of the library are two decorators, `@accepts` and `@responds`. The `@accepts` decorators defines what parameters or schemas the endpoint accepts, returning errors if the inputs fail validation, and `@responds` defines what schema should be used to serialize the output. This makes it easy to create a serialization layer on your API outputs without having to write a lot of extra code.
