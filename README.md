@@ -26,7 +26,7 @@ Here is a basic example of an endpoint that makes and returns a new Widget
 
 
 ```python
-from flask import Flask, jsonify, request
+from flask import Flask, request
 from flask_accepts import accepts, responds
 
 from .widget import Widget, WidgetSchema, make_widget
