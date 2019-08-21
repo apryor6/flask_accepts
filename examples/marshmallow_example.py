@@ -38,7 +38,7 @@ def create_app(env=None):
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
         @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
-        @responds(schema=WidgetSchema, api=api)
+        @responds("Widget", schema=WidgetSchema, api=api)
         def post(self):
             from flask import jsonify
 

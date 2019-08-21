@@ -3,6 +3,7 @@ from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest
 from marshmallow import Schema
 
+from flask_restplus import fields
 from flask_accepts.utils import for_swagger
 
 
@@ -50,7 +51,6 @@ def accepts(
 
     query_params = [arg for arg in args if isinstance(arg, dict)]
 
-    model_name = model_name
     for arg in args:  # check for positional string-arg, which is the model name
         if isinstance(arg, str):
             model_name = arg
@@ -106,7 +106,13 @@ def accepts(
     return decorator
 
 
-def responds(*args, schema=None, many: bool = False, api=None):
+def responds(
+    model_name: str = None,
+    schema=None,
+    many: bool = False,
+    api=None,
+    use_swagger: bool = True,
+):
     """
     Serialize the output of a function using the Marshmallow schema to dump the results.
     Note that `schema` should be the type, not an instance -- the `responds` decorator
@@ -125,6 +131,10 @@ def responds(*args, schema=None, many: bool = False, api=None):
     from functools import wraps
 
     def decorator(func):
+
+        # Check if we are decorating a class method
+        _IS_METHOD = _is_method(func)
+
         @wraps(func)
         def inner(*args, **kwargs):
             rv = func(*args, **kwargs)
@@ -137,6 +147,15 @@ def responds(*args, schema=None, many: bool = False, api=None):
                 # Regular route, need to manually create Response
                 return jsonify(serialized)
             return serialized
+
+        # Add Swagger
+        if api and use_swagger and _IS_METHOD:
+            if schema:
+                inner = api.doc(
+                    body=for_swagger(schema=schema, model_name=model_name, api=api)
+                )(inner)
+            elif _parser:
+                inner = api.expect(_parser)(inner)
 
         return inner
 

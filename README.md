@@ -128,7 +128,7 @@ Under-the-hood, `flask_accepts` translates and combines the provided dictionarie
 @api.route("/restplus/make_a_widget")
 class WidgetResource(Resource):
     @accepts(
-        "Widget"
+        "Widget",
         dict(name="some_arg", type=str),
         schema=WidgetSchema,
         api=api,
