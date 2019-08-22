@@ -5,7 +5,7 @@ from marshmallow import Schema
 
 from flask_restplus.model import Model
 from flask_restplus import fields, reqparse
-from flask_accepts.utils import for_swagger
+from flask_accepts.utils import for_swagger, get_default_model_name
 
 
 def accepts(
@@ -91,7 +91,11 @@ def accepts(
             if schema:
                 inner = api.doc(
                     params={qp["name"]: qp for qp in query_params},
-                    body=for_swagger(schema=schema, model_name=model_name, api=api),
+                    body=for_swagger(
+                        schema=schema,
+                        model_name=model_name or get_default_model_name(schema),
+                        api=api,
+                    ),
                 )(inner)
             elif _parser:
                 inner = api.expect(_parser)(inner)
@@ -143,6 +147,8 @@ def responds(
             break
     for qp in query_params:
         _parser.add_argument(**qp, location="values")
+    model_name = model_name or get_default_model_name(schema)
+    model_from_parser = _model_from_parser(model_name=model_name, parser=_parser)
 
     def decorator(func):
 
@@ -161,10 +167,8 @@ def responds(
             else:
                 from flask_restplus import marshal
 
-                serialized = marshal(rv, _model_from_parser(_parser))
-                # serialized = marshal(
-                # rv, Model("test", {"_id": fields.Integer, "name": fields.String})
-                # )
+                serialized = marshal(rv, model_from_parser)
+
             if not _is_method(func):
                 # Regular route, need to manually create Response
                 return jsonify(serialized), status_code
@@ -179,14 +183,17 @@ def responds(
                 )(inner)
 
             elif _parser:
-                inner = api.expect(_parser)(inner)
+                api.add_model(model_name, model_from_parser)
+                inner = _document_like_marshal_with(
+                    model_from_parser, status_code=status_code
+                )(inner)
 
         return inner
 
     return decorator
 
 
-def _model_from_parser(_parser: reqparse.RequestParser) -> Model:
+def _model_from_parser(model_name: str, parser: reqparse.RequestParser) -> Model:
     from flask_restplus import fields
 
     base_type_map = {
@@ -201,8 +208,8 @@ def _model_from_parser(_parser: reqparse.RequestParser) -> Model:
         "array": lambda arg: fields.List(base_type_map[arg["items"]["type"]]),
     }
     return Model(
-        "responds",
-        {arg["name"]: type_factory[arg["type"]](arg) for arg in _parser.__schema__},
+        model_name,
+        {arg["name"]: type_factory[arg["type"]](arg) for arg in parser.__schema__},
     )
 
 

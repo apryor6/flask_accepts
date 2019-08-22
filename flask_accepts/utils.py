@@ -1,3 +1,4 @@
+from typing import Optional
 from flask_restplus import fields as fr
 from marshmallow import fields as ma
 from marshmallow.schema import Schema, SchemaMeta
@@ -15,7 +16,7 @@ def unpack_nested(val, api):
     return fr.Nested(map_type(val.nested, api))
 
 
-def for_swagger(schema, api, model_name=None):
+def for_swagger(schema, api, model_name):
     """
     Convert a marshmallow schema to equivalent Flask-RESTplus model
 
@@ -31,7 +32,7 @@ def for_swagger(schema, api, model_name=None):
         for k, v in vars(schema()).get("declared_fields", {}).items()
         if type(v) in type_map
     }
-    return api.model(model_name or _default_model_name(schema), fields)
+    return api.model(model_name, fields)
 
 
 type_map = {
@@ -45,9 +46,16 @@ type_map = {
     Schema: for_swagger,
 }
 
+num_default_models = 0
 
-def _default_model_name(schema: Schema):
-    return "".join(schema.__name__.rsplit("Schema", 1))
+
+def get_default_model_name(schema: Optional[Schema] = None) -> str:
+    if schema:
+        return "".join(schema.__name__.rsplit("Schema", 1))
+    global num_default_models
+    name = f"DefaultResponseModel_{num_default_models}"
+    num_default_models += 1
+    return name
 
 
 def map_type(val, api):

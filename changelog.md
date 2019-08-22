@@ -27,3 +27,4 @@
 - Enable marshaling responses without providing a schema (only using reqparse)
 - Implement `validate` parameter in `responds`
 - Drop support for Flask-RESTful
+- Implement nice default names if none provided

@@ -226,6 +226,7 @@ def test_responds_with_parser(app, client):  # noqa
     @api.route("/test")
     class TestResource(Resource):
         @responds(
+            "King",
             dict(name="_id", type=int),
             dict(name="name", type=str),
             dict(name="value", type=float),
