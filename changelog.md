@@ -14,3 +14,17 @@
 
 - Validation errors now return a 400 properly instead of a 500
 - Greatly improve test coverage
+  
+0.6.0:
+
+- Support providing model name as positional parameter to `responds`
+
+0.7.0:
+
+- Fix a bug causing models from `responds` to appear in request instead of response docs
+- Add `status_code` parameter to `responds`
+- Implement default naming creation based upon schema name if no model name provided. This will use the class name of the schema, removing the trailing "Schema" if provided.
+- Enable marshaling responses without providing a schema (only using reqparse)
+- Implement `validate` parameter in `responds`
+- Drop support for Flask-RESTful
+- Implement nice default names if none provided

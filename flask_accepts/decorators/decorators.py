@@ -3,7 +3,9 @@ from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest
 from marshmallow import Schema
 
-from flask_accepts.utils import for_swagger
+from flask_restplus.model import Model
+from flask_restplus import fields, reqparse
+from flask_accepts.utils import for_swagger, get_default_model_name
 
 
 def accepts(
@@ -22,7 +24,7 @@ def accepts(
         *args: any number of dictionaries containing parameters to pass to
             reqparse.RequestParser().add_argument(). A single string parameter may also be
             provided that is used as the model name.  By default these parameters
-            will be parsed using the default logic (see https://flask-restful.readthedocs.io/en/0.3.5/reqparse.html#argument-locations);
+            will be parsed using the default logic
             however, if a schema is provided then the JSON body is assumed to correspond
             to it and will not be parsed for query params
         model_name (str): the name to pass to api.Model, can optionally be provided as a str argument to *args
@@ -34,13 +36,6 @@ def accepts(
     Returns:
         The wrapped route
     """
-    try:
-        from flask_restplus import reqparse
-    except ImportError:  # pragma: no cover
-        try:
-            from flask_restful import reqparse
-        except ImportError as e:
-            raise e
 
     # If an api was passed in, we need to use its parser so Swagger is aware
     if api:
@@ -50,7 +45,6 @@ def accepts(
 
     query_params = [arg for arg in args if isinstance(arg, dict)]
 
-    model_name = model_name
     for arg in args:  # check for positional string-arg, which is the model name
         if isinstance(arg, str):
             model_name = arg
@@ -97,7 +91,11 @@ def accepts(
             if schema:
                 inner = api.doc(
                     params={qp["name"]: qp for qp in query_params},
-                    body=for_swagger(schema=schema, model_name=model_name, api=api),
+                    body=for_swagger(
+                        schema=schema,
+                        model_name=model_name or get_default_model_name(schema),
+                        api=api,
+                    ),
                 )(inner)
             elif _parser:
                 inner = api.expect(_parser)(inner)
@@ -106,7 +104,16 @@ def accepts(
     return decorator
 
 
-def responds(*args, schema=None, many: bool = False, api=None):
+def responds(
+    *args,
+    model_name: str = None,
+    schema=None,
+    many: bool = False,
+    api=None,
+    status_code: int = 200,
+    validate: bool = True,
+    use_swagger: bool = True,
+):
     """
     Serialize the output of a function using the Marshmallow schema to dump the results.
     Note that `schema` should be the type, not an instance -- the `responds` decorator
@@ -124,7 +131,30 @@ def responds(*args, schema=None, many: bool = False, api=None):
     """
     from functools import wraps
 
+    from flask_restplus import reqparse
+
+    # If an api was passed in, we need to use its parser so Swagger is aware
+    if api:
+        _parser = api.parser()
+    else:
+        _parser = reqparse.RequestParser(bundle_errors=True)
+
+    query_params = [arg for arg in args if isinstance(arg, dict)]
+
+    for arg in args:  # check for positional string-arg, which is the model name
+        if isinstance(arg, str):
+            model_name = arg
+            break
+    for qp in query_params:
+        _parser.add_argument(**qp, location="values")
+    model_name = model_name or get_default_model_name(schema)
+    model_from_parser = _model_from_parser(model_name=model_name, parser=_parser)
+
     def decorator(func):
+
+        # Check if we are decorating a class method
+        _IS_METHOD = _is_method(func)
+
         @wraps(func)
         def inner(*args, **kwargs):
             rv = func(*args, **kwargs)
@@ -132,15 +162,69 @@ def responds(*args, schema=None, many: bool = False, api=None):
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
-            serialized = schema(many=many).dump(rv).data
+            if schema:
+                serialized = schema(many=many).dump(rv).data
+            else:
+                from flask_restplus import marshal
+
+                serialized = marshal(rv, model_from_parser)
+
             if not _is_method(func):
                 # Regular route, need to manually create Response
-                return jsonify(serialized)
-            return serialized
+                return jsonify(serialized), status_code
+            return serialized, status_code
+
+        # Add Swagger
+        if api and use_swagger and _IS_METHOD:
+            if schema:
+                inner = _document_like_marshal_with(
+                    for_swagger(schema=schema, model_name=model_name, api=api),
+                    status_code=status_code,
+                )(inner)
+
+            elif _parser:
+                api.add_model(model_name, model_from_parser)
+                inner = _document_like_marshal_with(
+                    model_from_parser, status_code=status_code
+                )(inner)
 
         return inner
 
     return decorator
+
+
+def _model_from_parser(model_name: str, parser: reqparse.RequestParser) -> Model:
+    from flask_restplus import fields
+
+    base_type_map = {
+        "integer": fields.Integer,
+        "string": fields.String,
+        "number": fields.Float,
+    }
+    type_factory = {
+        "integer": lambda arg: base_type_map["integer"],
+        "string": lambda arg: base_type_map["string"],
+        "number": lambda arg: base_type_map["number"],
+        "array": lambda arg: fields.List(base_type_map[arg["items"]["type"]]),
+    }
+    return Model(
+        model_name,
+        {arg["name"]: type_factory[arg["type"]](arg) for arg in parser.__schema__},
+    )
+
+
+def merge(first: dict, second: dict) -> dict:
+    return {**first, **second}
+
+
+def _document_like_marshal_with(values, status_code: int = 200):
+    def inner(func):
+        description = "a test description"
+        doc = {"responses": {status_code: (description, values)}, "__mask__": True}
+        func.__apidoc__ = merge(getattr(func, "__apidoc__", {}), doc)
+        return func
+
+    return inner
 
 
 def _is_method(func):

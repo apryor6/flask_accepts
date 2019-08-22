@@ -212,10 +212,68 @@ def test_responds_passes_raw_responses_through_untouched(app, client):  # noqa
             from flask import make_response, Response
 
             obj = {"_id": 42, "name": "Jon Snow"}
-            # return make_response({"message": "test"}, 201)
             return Response("A prebuild response that won't be serialised", 201)
 
     with client as cl:
         resp = cl.get("/test")
         assert resp.status_code == 201
+
+
+def test_responds_with_parser(app, client):  # noqa
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(
+            "King",
+            dict(name="_id", type=int),
+            dict(name="name", type=str),
+            dict(name="value", type=float),
+            dict(name="status", choices=("alive", "dead")),
+            dict(name="todos", action="append"),
+            api=api,
+        )
+        def get(self):
+            from flask import make_response, Response
+
+            return {
+                "_id": 42,
+                "name": "Jon Snow",
+                "value": 100.0,
+                "status": "alive",
+                "todos": ["one", "two"],
+            }
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 200
+        assert resp.json == {
+            "_id": 42,
+            "name": "Jon Snow",
+            "value": 100.0,
+            "status": "alive",
+            "todos": ["one", "two"],
+        }
+
+
+def test_responds_respects_status_code(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api, status_code=999)
+        def get(self):
+            from flask import make_response, Response
+
+            obj = {"_id": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 999
 
