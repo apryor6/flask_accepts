@@ -27,7 +27,48 @@ This makes it easy to create a serialization layer on your API outputs without h
 
 Simple, `pip install flask_accepts`
 
-### Usage
+### Basic usage
+
+Here is a basic example of an endpoint that takes a couple of URL query params and returns a new Widget
+
+```python
+from dataclasses import dataclass
+from marshmallow import Schema, fields, post_load
+from flask import Flask, request
+from flask_accepts import accepts, responds
+from flask_restplus import Api, Resource
+
+
+@dataclass
+class Widget:
+    foo: str
+    baz: int
+
+
+class WidgetSchema(Schema):
+    foo = fields.String()
+    baz = fields.Integer()
+
+
+def create_app():
+    app = Flask(__name__)
+    api = Api(app)
+
+    @api.route("/widget")
+    class WidgetResource(Resource):
+        @accepts(dict(name="foo", type=str), dict(name="baz", type=int), api=api)
+        @responds(schema=WidgetSchema, api=api)
+        def get(self):
+            return Widget(**request.parsed_args)
+
+    return app
+
+
+if __name__ == "__main__":
+    create_app().run()
+```
+
+### Usage with "vanilla Flask"
 
 Here is a basic example of an endpoint that makes and returns a new Widget
 
@@ -44,9 +85,9 @@ def create_app():
     @accepts(dict(name="foo", type=str), api=api)
     @responds(schema=WidgetSchema, api=api)
     def widget():
-	name: str = request.parsed_args["foo"]
-	widget: Widget = make_widget(name)
-	return widget
+	    name: str = request.parsed_args["foo"]
+	    widget: Widget = make_widget(name)
+	    return widget
 
     return app
 ```
