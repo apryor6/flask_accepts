@@ -189,9 +189,20 @@ def responds(
 def _model_from_parser(_parser: reqparse.RequestParser) -> Model:
     from flask_restplus import fields
 
-    type_map = {"integer": fields.Integer, "string": fields.String}
+    base_type_map = {
+        "integer": fields.Integer,
+        "string": fields.String,
+        "number": fields.Float,
+    }
+    type_factory = {
+        "integer": lambda arg: base_type_map["integer"],
+        "string": lambda arg: base_type_map["string"],
+        "number": lambda arg: base_type_map["number"],
+        "array": lambda arg: fields.List(base_type_map[arg["items"]["type"]]),
+    }
     return Model(
-        "responds", {arg["name"]: type_map[arg["type"]] for arg in _parser.__schema__}
+        "responds",
+        {arg["name"]: type_factory[arg["type"]](arg) for arg in _parser.__schema__},
     )
 
 

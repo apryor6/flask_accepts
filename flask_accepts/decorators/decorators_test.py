@@ -225,16 +225,35 @@ def test_responds_with_parser(app, client):  # noqa
 
     @api.route("/test")
     class TestResource(Resource):
-        @responds(dict(name="_id", type=int), dict(name="name", type=str), api=api)
+        @responds(
+            dict(name="_id", type=int),
+            dict(name="name", type=str),
+            dict(name="value", type=float),
+            dict(name="status", choices=("alive", "dead")),
+            dict(name="todos", action="append"),
+            api=api,
+        )
         def get(self):
             from flask import make_response, Response
 
-            return {"_id": 42, "name": "Jon Snow"}
+            return {
+                "_id": 42,
+                "name": "Jon Snow",
+                "value": 100.0,
+                "status": "alive",
+                "todos": ["one", "two"],
+            }
 
     with client as cl:
         resp = cl.get("/test")
         assert resp.status_code == 200
-        assert resp.json == {"_id": 42, "name": "Jon Snow"}
+        assert resp.json == {
+            "_id": 42,
+            "name": "Jon Snow",
+            "value": 100.0,
+            "status": "alive",
+            "todos": ["one", "two"],
+        }
 
 
 def test_responds_respects_status_code(app, client):  # noqa
