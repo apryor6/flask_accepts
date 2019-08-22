@@ -28,3 +28,7 @@
 - Implement `validate` parameter in `responds`
 - Drop support for Flask-RESTful
 - Implement nice default names if none provided
+
+0.7.1:
+
+- Remove stale default value

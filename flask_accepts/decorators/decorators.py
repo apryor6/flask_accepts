@@ -112,6 +112,7 @@ def responds(
     api=None,
     status_code: int = 200,
     validate: bool = True,
+    description: str = None,
     use_swagger: bool = True,
 ):
     """
@@ -180,6 +181,7 @@ def responds(
                 inner = _document_like_marshal_with(
                     for_swagger(schema=schema, model_name=model_name, api=api),
                     status_code=status_code,
+                    description=description,
                 )(inner)
 
             elif _parser:
@@ -217,9 +219,12 @@ def merge(first: dict, second: dict) -> dict:
     return {**first, **second}
 
 
-def _document_like_marshal_with(values, status_code: int = 200):
+def _document_like_marshal_with(
+    values, status_code: int = 200, description: str = None
+):
+    description = description or "Success"
+
     def inner(func):
-        description = "a test description"
         doc = {"responses": {status_code: (description, values)}, "__mask__": True}
         func.__apidoc__ = merge(getattr(func, "__apidoc__", {}), doc)
         return func
