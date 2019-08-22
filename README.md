@@ -3,7 +3,7 @@
 
 # flask_accepts
 
-I love `reqparse` from `Flask-RESTplus` for input validation, but I got sick of writing code like this in every endpoint:
+I love `reqparse` from `Flask-RESTplus` for input validation, but I found it hard to keep all of the different decorators and what they do straight, and I got sick of writing code like this in every endpoint:
 
 ```
 parser = reqparse.RequestParser()
@@ -14,9 +14,14 @@ args = parser.parse_args()
 
 And I also love Marshmallow, but the two technologies don't really play well together, at least not out-of-the-box.
 
-So I made `flask_accepts`, which allows you to decorate an endpoint with just the input parameter information and it will internally parse those arguments and attach the results to the Flask `request` object in `request.parsed_args`. It will also automatically add the Swagger integrations from `Flask-RESTplus` where possible without you have to explicitly add the `@api.expect` decorator. This includes supporting Swagger even if you provided a Marshmallow schema -- the type mapping is handled internally.
+So I made `flask_accepts`, which gives you two simple decorators, `accepts` and `responds`, that combine these two libraries in a way that's easy-to-use for input/output handling in Flask. The `@accepts` decorators defines what parameters or schemas the endpoint accepts, returning errors if the inputs fail validation, and `@responds` defines how to serialize the output, supporting both `reqparse` models and `Marshmallow` schemas.
 
-The core of the library are two decorators, `@accepts` and `@responds`. The `@accepts` decorators defines what parameters or schemas the endpoint accepts, returning errors if the inputs fail validation, and `@responds` defines what schema should be used to serialize the output. This makes it easy to create a serialization layer on your API outputs without having to write a lot of extra code.
+This makes it easy to create a serialization layer on your API outputs without having to write a lot of extra code while allowing usage of RESTplus and Marshmallow side-by-side. It will also automatically add the Swagger integrations from `Flask-RESTplus` where possible without you have to explicitly add the various RESTplus decorators (it does that for you). *This includes supporting Swagger even if you provided a Marshmallow schema -- the type mapping is handled internally.*
+
+
+`accepts` takes input parameter information and internally parses those arguments and attaches the results to the Flask `request` object in `request.parsed_args`
+
+`responds` takes the provided model parameters or schema and uses that to serialize the output of the decorated function.
 
 ### Installation
 
