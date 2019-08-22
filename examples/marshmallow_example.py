@@ -21,6 +21,24 @@ class WidgetSchema(Schema):
         return Widget(**kwargs)
 
 
+class Doodad:
+    def __init__(self, foo: str, baz: int):
+        self.foo = foo
+        self.baz = baz
+
+    def __repr__(self):
+        return f"<Doodad(foo='{self.foo}', baz={self.baz})>"
+
+
+class DoodadSchema(Schema):
+    doodad_foo = fields.String(100)
+    doodad_baz = fields.Integer()
+
+    @post_load
+    def make(self, kwargs):
+        return Doodad(**kwargs)
+
+
 def create_app(env=None):
     from flask_restplus import Api, Namespace, Resource
 
@@ -37,9 +55,11 @@ def create_app(env=None):
 
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
-        @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
+        @accepts(
+            "Doodad", dict(name="some_arg", type=str), schema=DoodadSchema, api=api
+        )
         @responds("Widget", schema=WidgetSchema, api=api)
-        def post(self):
+        def get(self):
             from flask import jsonify
 
             return request.parsed_obj

@@ -31,7 +31,7 @@ def for_swagger(schema, api, model_name=None):
         for k, v in vars(schema()).get("declared_fields", {}).items()
         if type(v) in type_map
     }
-    return api.model(model_name or str(uuid.uuid4()), fields)
+    return api.model(model_name or _default_model_name(schema), fields)
 
 
 type_map = {
@@ -44,6 +44,10 @@ type_map = {
     SchemaMeta: for_swagger,
     Schema: for_swagger,
 }
+
+
+def _default_model_name(schema: Schema):
+    return "".join(schema.__name__.rsplit("Schema", 1))
 
 
 def map_type(val, api):

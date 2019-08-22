@@ -6,7 +6,7 @@ setup(
     name="flask_accepts",
     author='Alan "AJ" Pryor, Jr.',
     author_email="apryor6@gmail.com",
-    version="0.6.0",
+    version="0.7.0",
     description="Easy Flask input validation",
     ext_modules=[],
     packages=find_packages(),

@@ -193,3 +193,62 @@ class WidgetResource(Resource):
         assert resp.status_code == 400
         assert "Not a valid integer." in resp.json["errors"]["schema_errors"]["_id"]
 ```
+
+### Specifying response codes
+
+The response code can be specified in the `responds` decorator through the `status_code` parameter.
+
+```python
+from marshmallow import fields, Schema, post_load
+from flask import Flask, jsonify, request
+from flask_accepts import accepts, responds
+
+
+class Widget:
+    def __init__(self, foo: str, baz: int):
+        self.foo = foo
+        self.baz = baz
+
+    def __repr__(self):
+        return f"<Widget(foo='{self.foo}', baz={self.baz})>"
+
+
+class WidgetSchema(Schema):
+    foo = fields.String(100)
+    baz = fields.Integer()
+
+    @post_load
+    def make(self, kwargs):
+        return Widget(**kwargs)
+
+
+def create_app(env=None):
+    from flask_restplus import Api, Namespace, Resource
+
+    app = Flask(__name__)
+    api = Api(app)
+
+    @app.route("/simple/make_a_widget", methods=["POST"])
+    @accepts(dict(name="some_arg", type=str), schema=WidgetSchema)
+    @responds(schema=WidgetSchema, status_code=201)
+    def post():
+        from flask import jsonify
+
+        return request.parsed_obj
+
+    @api.route("/restplus/make_a_widget")
+    class WidgetResource(Resource):
+        @accepts("Widget", dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
+        @responds(schema=WidgetSchema, api=api, status_code=201)
+        def post(self):
+            from flask import jsonify
+
+            return request.parsed_obj
+
+    return app
+
+
+app = create_app()
+if __name__ == "__main__":
+    app.run(debug=True)
+```
