@@ -7,14 +7,11 @@ import uuid
 
 def unpack_list(val, api, model_name: str = None):
     model_name = model_name = get_default_model_name()
-    # Unpacks a List. Only does one level for now. Eventually should make recursive.
     return fr.List(map_type(val.inner, api, model_name))
 
 
 def unpack_nested(val, api, model_name: str = None):
     model_name = model_name = get_default_model_name()
-    # Unpacks a nested value. Only does one level for now. Eventually should make recursive.
-    # return fr.Nested(for_swagger(map_type(val.nested, api), api=api))
     return fr.Nested(map_type(val.nested, api, model_name))
 
 
