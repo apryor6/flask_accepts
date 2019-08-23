@@ -41,3 +41,8 @@
 0.9.0:
 
 - Upgrade to marshmallow 3
+
+0.9.1
+
+- Add tests for multiply nested List/Nested types
+- Fix a bug where model_name was not properly passed to for_swagger
