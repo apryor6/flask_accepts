@@ -39,9 +39,9 @@ def test_unpack_nested_list():
     ) as mock_unpack_nested, patch.dict(
         "flask_accepts.utils.type_map", {ma.List: mock_unpack_list}
     ):
-        result = utils.unpack_list(ma.Nested(ma.List(ma.Integer())), api=api)
+        result = utils.unpack_nested(ma.Nested(ma.List(ma.Integer())), api=api)
 
-        assert isinstance(result, fr.List)
+        assert isinstance(result, fr.Nested)
         assert mock_unpack_nested.call_count == 1
         assert mock_unpack_list.call_count == 1
 
@@ -50,14 +50,6 @@ def test_unpack_nested():
     app = Flask(__name__)
     api = Api(app)
     result = utils.unpack_nested(ma.Nested(ma.Integer()), api=api)
-
-    assert result
-
-
-def test_unpack_nested_list():
-    app = Flask(__name__)
-    api = Api(app)
-    result = utils.unpack_nested(ma.Nested(ma.List(ma.Integer())), api=api)
 
     assert result
 
