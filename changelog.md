@@ -37,3 +37,7 @@
 
 - Implement support for passing a schema instance _or_ type to accepts and responds
 - Deprecate `many` parameter in favor of passing special parameters to an instance of the schema where necessary
+
+0.9.0:
+
+- Upgrade to marshmallow 3
