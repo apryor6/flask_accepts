@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Type, Union
 from flask_restplus import fields as fr
 from marshmallow import fields as ma
 from marshmallow.schema import Schema, SchemaMeta
@@ -29,7 +29,7 @@ def for_swagger(schema, api, model_name):
     """
     fields = {
         k: map_type(v, api)
-        for k, v in vars(schema()).get("declared_fields", {}).items()
+        for k, v in vars(schema).get("declared_fields", {}).items()
         if type(v) in type_map
     }
     return api.model(model_name, fields)
@@ -49,9 +49,14 @@ type_map = {
 num_default_models = 0
 
 
-def get_default_model_name(schema: Optional[Schema] = None) -> str:
+def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None) -> str:
     if schema:
-        return "".join(schema.__name__.rsplit("Schema", 1))
+        if isinstance(schema, Schema):
+            return "".join(schema.__class__.__name__.rsplit("Schema", 1))
+        else:
+            # It is a type itself
+            return "".join(schema.__name__.rsplit("Schema", 1))
+
     global num_default_models
     name = f"DefaultResponseModel_{num_default_models}"
     num_default_models += 1
