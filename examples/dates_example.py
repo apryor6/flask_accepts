@@ -12,11 +12,13 @@ from datetime import datetime
 class Doodad:
     name: str
     when: datetime
+    is_on: bool
 
 
 class DoodadSchema(Schema):
     name = fields.String()
     when = fields.DateTime()
+    is_on = fields.Boolean()
 
     @post_load
     def make(self, data, **kwargs):
