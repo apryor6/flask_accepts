@@ -250,7 +250,7 @@ def test_respond_schema_instance_respects_exclude(app, client):  # noqa
         assert obj["name"] == "Jon Snow"
 
 
-def test_respond_schema_instance_respects_many(app, client):  # noqa
+def test_respond_schema_respects_many(app, client):  # noqa
     class TestSchema(Schema):
         _id = fields.Integer()
         name = fields.String()

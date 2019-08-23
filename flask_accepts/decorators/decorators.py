@@ -38,6 +38,8 @@ def accepts(
         The wrapped route
     """
 
+    _check_deprecate_many(many)
+
     # If an api was passed in, we need to use its parser so Swagger is aware
     if api:
         _parser = api.parser()
@@ -138,16 +140,7 @@ def responds(
 
     from flask_restplus import reqparse
 
-    if many:
-        import warnings
-
-        warnings.warn(
-            "The 'many' parameter is deprecated in favor of passing these "
-            "arguments to an actual instance of Marshmallow schema (i.e. "
-            "prefer @responds(schema=MySchema(many=True)) instead of "
-            "@responds(schema=MySchema, many=True))",
-            DeprecationWarning,
-        )
+    _check_deprecate_many(many)
 
     # If an api was passed in, we need to use its parser so Swagger is aware
     if api:
@@ -213,6 +206,19 @@ def responds(
         return inner
 
     return decorator
+
+
+def _check_deprecate_many(many: bool = False):
+    if many:
+        import warnings
+
+        warnings.warn(
+            "The 'many' parameter is deprecated in favor of passing these "
+            "arguments to an actual instance of Marshmallow schema (i.e. "
+            "prefer @responds(schema=MySchema(many=True)) instead of "
+            "@responds(schema=MySchema, many=True))",
+            DeprecationWarning,
+        )
 
 
 def _get_or_create_schema(
