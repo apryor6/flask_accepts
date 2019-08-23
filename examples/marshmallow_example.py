@@ -45,20 +45,20 @@ def create_app(env=None):
     app = Flask(__name__)
     api = Api(app)
 
-    @app.route("/simple/make_a_widget", methods=["POST"])
-    @accepts(dict(name="some_arg", type=str), schema=WidgetSchema)
-    @responds(schema=WidgetSchema)
-    def post():
-        from flask import jsonify
+    # @app.route("/simple/make_a_widget", methods=["POST"])
+    # @accepts(dict(name="some_arg", type=str), schema=WidgetSchema)
+    # @responds(schema=WidgetSchema)
+    # def post():
+    #     from flask import jsonify
 
-        return request.parsed_obj
+    #     return request.parsed_obj
 
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
         @accepts(
             "Doodad", dict(name="some_arg", type=str), schema=DoodadSchema, api=api
         )
-        @responds("Widget", schema=WidgetSchema, api=api)
+        # @responds("Widget", schema=WidgetSchema, api=api)
         def get(self):
             from flask import jsonify
 

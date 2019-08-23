@@ -16,7 +16,6 @@ def unpack_nested(val, api, model_name: str = None):
 
 
 def for_swagger(schema, api, model_name: str = None):
-    model_name = model_name = get_default_model_name()
     """
     Convert a marshmallow schema to equivalent Flask-RESTplus model
 
@@ -28,6 +27,8 @@ def for_swagger(schema, api, model_name: str = None):
     Returns:
         api.model: An equivalent api.model
     """
+
+    model_name = model_name or get_default_model_name()
     fields = {
         k: map_type(v, api, model_name)
         for k, v in vars(schema).get("declared_fields", {}).items()
