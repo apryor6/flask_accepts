@@ -16,8 +16,7 @@ And I also love Marshmallow, but the two technologies don't really play well tog
 
 So I made `flask_accepts`, which gives you two simple decorators, `accepts` and `responds`, that combine these two libraries in a way that's easy-to-use for input/output handling in Flask. The `@accepts` decorators defines what parameters or schemas the endpoint accepts, returning errors if the inputs fail validation, and `@responds` defines how to serialize the output, supporting both `reqparse` models and `Marshmallow` schemas.
 
-This makes it easy to create a serialization layer on your API outputs without having to write a lot of extra code while allowing usage of RESTplus and Marshmallow side-by-side. It will also automatically add the Swagger integrations from `Flask-RESTplus` where possible without you have to explicitly add the various RESTplus decorators (it does that for you). *This includes supporting Swagger even if you provided a Marshmallow schema -- the type mapping is handled internally.*
-
+This makes it easy to create a serialization layer on your API outputs without having to write a lot of extra code while allowing usage of RESTplus and Marshmallow side-by-side. It will also automatically add the Swagger integrations from `Flask-RESTplus` where possible without you have to explicitly add the various RESTplus decorators (it does that for you). _This includes supporting Swagger even if you provided a Marshmallow schema -- the type mapping is handled internally._
 
 `accepts` takes input parameter information and internally parses those arguments and attaches the results to the Flask `request` object in `request.parsed_args`
 
@@ -107,18 +106,16 @@ For both decorators, you can pass a schema instance, which allows you to pass ad
 The following example includes examples of both Flask-RESTplus style endpoints with a Resource class containing REST methods as well as a "vanilla" Flask endpoint, which is just a function.
 
 ```python
+from dataclasses import dataclass
 from marshmallow import fields, Schema, post_load
 from flask import Flask, jsonify, request
 from flask_accepts import accepts, responds
 
 
+@dataclass
 class Widget:
-    def __init__(self, foo: str, baz: int):
-        self.foo = foo
-        self.baz = baz
-
-    def __repr__(self):
-        return f"<Widget(foo='{self.foo}', baz={self.baz})>"
+    foo: str
+    baz: int
 
 
 class WidgetSchema(Schema):
@@ -126,8 +123,8 @@ class WidgetSchema(Schema):
     baz = fields.Integer()
 
     @post_load
-    def make(self, kwargs):
-        return Widget(**kwargs)
+    def make(self, data, **kwargs):
+        return Widget(**data)
 
 
 def create_app(env=None):
@@ -146,7 +143,7 @@ def create_app(env=None):
 
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
-        @accepts("Widget", dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
+        @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
         @responds(schema=WidgetSchema, api=api)
         def post(self):
             from flask import jsonify
@@ -264,8 +261,8 @@ class WidgetSchema(Schema):
     baz = fields.Integer()
 
     @post_load
-    def make(self, kwargs):
-        return Widget(**kwargs)
+    def make(self, data, **kwargs):
+        return Widget(**data)
 
 
 def create_app(env=None):
