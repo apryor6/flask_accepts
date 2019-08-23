@@ -46,3 +46,7 @@
 
 - Add tests for multiply nested List/Nested types
 - Fix a bug where model_name was not properly passed to for_swagger
+
+0.9.2
+
+- Fix a bug causing all models to have default names
