@@ -58,9 +58,9 @@ def test_get_default_model_name_that_does_not_end_in_schema():
 
 
 def test_get_default_model_name_default_names():
-    from .utils import get_default_model_name
+    from .utils import get_default_model_name, num_default_models
 
     for model_num in range(5):
         result = get_default_model_name()
-        expected = f"DefaultResponseModel_{model_num}"
+        expected = f"DefaultResponseModel_{model_num + num_default_models}"
         assert result == expected

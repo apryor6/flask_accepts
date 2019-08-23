@@ -387,3 +387,86 @@ def test_responds_respects_status_code(app, client):  # noqa
         resp = cl.get("/test")
         assert resp.status_code == 999
 
+
+def test_accepts_with_nested_schema(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    class HostSchema(Schema):
+        name = fields.String()
+        child = fields.Nested(TestSchema)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            schema=HostSchema,
+            api=api,
+        )
+        def post(self):
+            assert request.parsed_obj
+            assert request.parsed_obj["child"] == {"_id": 42, "name": "test name"}
+            assert request.parsed_obj["name"] == "test host"
+            return "success"
+
+    with client as cl:
+        resp = cl.post(
+            "/test?foo=3",
+            json={"name": "test host", "child": {"_id": 42, "name": "test name"}},
+        )
+        assert resp.status_code == 200
+
+
+def test_accepts_with_twice_nested_schema(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    class HostSchema(Schema):
+        name = fields.String()
+        child = fields.Nested(TestSchema)
+
+    class HostHostSchema(Schema):
+        name = fields.String()
+        child = fields.Nested(HostSchema)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            schema=HostHostSchema,
+            api=api,
+        )
+        def post(self):
+            assert request.parsed_obj
+            assert request.parsed_obj["child"]["child"] == {
+                "_id": 42,
+                "name": "test name",
+            }
+            assert request.parsed_obj["child"] == {
+                "name": "test host",
+                "child": {"_id": 42, "name": "test name"},
+            }
+            assert request.parsed_obj["name"] == "test host host"
+            return "success"
+
+    with client as cl:
+        resp = cl.post(
+            "/test?foo=3",
+            json={
+                "name": "test host host",
+                "child": {
+                    "name": "test host",
+                    "child": {"_id": 42, "name": "test name"},
+                },
+            },
+        )
+        assert resp.status_code == 200
+
