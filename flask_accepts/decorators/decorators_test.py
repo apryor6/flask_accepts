@@ -59,6 +59,34 @@ def test_arguments_are_added_to_request_with_Resource_and_schema(app, client):  
         assert resp.status_code == 200
 
 
+def test_arguments_are_added_to_request_with_Resource_and_schema_instance(
+    app, client
+):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            "Foo",
+            dict(name="foo", type=int, help="An important foo"),
+            schema=TestSchema(),
+            api=api,
+        )
+        def post(self):
+            assert request.parsed_obj
+            assert request.parsed_obj["_id"] == 42
+            assert request.parsed_obj["name"] == "test name"
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test?foo=3", json={"_id": 42, "name": "test name"})
+        assert resp.status_code == 200
+
+
 def test_validation_errors_added_to_request_with_Resource_and_schema(
     app, client
 ):  # noqa
@@ -178,6 +206,88 @@ def test_responds(app, client):  # noqa
         obj = resp.json
         assert obj["_id"] == 42
         assert obj["name"] == "Jon Snow"
+
+
+def test_respond_schema_instance(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema(), api=api)
+        def get(self):
+            obj = {"_id": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert obj["_id"] == 42
+        assert obj["name"] == "Jon Snow"
+
+
+def test_respond_schema_instance_respects_exclude(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema(exclude=("_id",)), api=api)
+        def get(self):
+            obj = {"_id": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert "_id" not in obj
+        assert obj["name"] == "Jon Snow"
+
+
+def test_respond_schema_respects_many(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, many=True, api=api)
+        def get(self):
+            obj = [{"_id": 42, "name": "Jon Snow"}]
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert obj == [{"_id": 42, "name": "Jon Snow"}]
+
+
+def test_respond_schema_instance_respects_many(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema(many=True), api=api)
+        def get(self):
+            obj = [{"_id": 42, "name": "Jon Snow"}]
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert obj == [{"_id": 42, "name": "Jon Snow"}]
 
 
 def test_responds_regular_route(app, client):  # noqa

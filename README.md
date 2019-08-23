@@ -102,7 +102,7 @@ of a request, and the result will be stored in the Flask request object at `requ
 
 For `responds`, the schema will be used to dump the returned value from the decorated function. Note that this means you should return the _object_ you want to serialize. You need not interact directly with the schema in any way other than passing it in the decorator.
 
-For both decorators, you can pass `many=True` to the decorator, which will pass that along to the schema.
+For both decorators, you can pass a schema instance, which allows you to pass additional parameters such as `many=True`
 
 The following example includes examples of both Flask-RESTplus style endpoints with a Resource class containing REST methods as well as a "vanilla" Flask endpoint, which is just a function.
 

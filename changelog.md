@@ -32,3 +32,8 @@
 0.7.1:
 
 - Remove stale default value
+
+0.8.0:
+
+- Implement support for passing a schema instance _or_ type to accepts and responds
+- Deprecate `many` parameter in favor of passing special parameters to an instance of the schema where necessary

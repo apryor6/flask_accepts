@@ -1,3 +1,4 @@
+from typing import Type, Union
 from flask import jsonify
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest
@@ -11,7 +12,7 @@ from flask_accepts.utils import for_swagger, get_default_model_name
 def accepts(
     *args,
     model_name: str = None,
-    schema: Schema = None,
+    schema: Union[Schema, Type[Schema], None] = None,
     many: bool = False,
     api=None,
     use_swagger: bool = True,
@@ -37,6 +38,8 @@ def accepts(
         The wrapped route
     """
 
+    _check_deprecate_many(many)
+
     # If an api was passed in, we need to use its parser so Swagger is aware
     if api:
         _parser = api.parser()
@@ -51,6 +54,9 @@ def accepts(
             break
     for qp in query_params:
         _parser.add_argument(**qp, location="values")
+
+    if schema:
+        schema = _get_or_create_schema(schema, many=many)
 
     def decorator(func):
         from functools import wraps
@@ -71,7 +77,7 @@ def accepts(
 
             # Handle Marshmallow schema
             if schema:
-                obj, err = schema(many=many).load(request.get_json())
+                obj, err = schema.load(request.get_json())
                 if err:
                     error = error or BadRequest(f"Invalid parsing error: {err}")
                     if hasattr(error, "data"):
@@ -124,7 +130,7 @@ def responds(
     Args:
         schema (bool, optional): Marshmallow schema with which to serialize the output
             of the wrapped function.
-        many (bool, optional): The Marshmallow schema `many` parameter, which will
+        many (bool, optional): (DEPRECATED) The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True.
     
     Returns:
@@ -133,6 +139,8 @@ def responds(
     from functools import wraps
 
     from flask_restplus import reqparse
+
+    _check_deprecate_many(many)
 
     # If an api was passed in, we need to use its parser so Swagger is aware
     if api:
@@ -148,6 +156,10 @@ def responds(
             break
     for qp in query_params:
         _parser.add_argument(**qp, location="values")
+
+    if schema:
+        schema = _get_or_create_schema(schema, many=many)
+
     model_name = model_name or get_default_model_name(schema)
     model_from_parser = _model_from_parser(model_name=model_name, parser=_parser)
 
@@ -164,7 +176,8 @@ def responds(
             if isinstance(rv, Response):
                 return rv
             if schema:
-                serialized = schema(many=many).dump(rv).data
+                serialized = schema.dump(rv).data
+                # serialized = schema(many=many).dump(rv).data
             else:
                 from flask_restplus import marshal
 
@@ -193,6 +206,27 @@ def responds(
         return inner
 
     return decorator
+
+
+def _check_deprecate_many(many: bool = False):
+    if many:
+        import warnings
+
+        warnings.warn(
+            "The 'many' parameter is deprecated in favor of passing these "
+            "arguments to an actual instance of Marshmallow schema (i.e. "
+            "prefer @responds(schema=MySchema(many=True)) instead of "
+            "@responds(schema=MySchema, many=True))",
+            DeprecationWarning,
+        )
+
+
+def _get_or_create_schema(
+    schema: Union[Schema, Type[Schema]], many: bool = False
+) -> Schema:
+    if isinstance(schema, Schema):
+        return schema
+    return schema(many=many)
 
 
 def _model_from_parser(model_name: str, parser: reqparse.RequestParser) -> Model:
