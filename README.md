@@ -158,6 +158,10 @@ if __name__ == "__main__":
     app.run(debug=True)
 ```
 
+#### Marshmallow validators
+
+You can provide any of the built-in validators to Marshmallow schemas. See [here](https://github.com/apryor6/flask_accepts/blob/master/examples/marshmallow_validator_example.py) for an example of using schemas + validators inside of flask_accepts.
+
 ## Automatic Swagger documentation
 
 The `accepts` decorator will automatically enable Swagger by internally adding the `@api.expects` decorator. If you have provided positional arguments to `accepts`, this involves generating the corresponding `api.parser()` (which is a `reqparse.RequestParser` that includes the Swagger context). If you provide a Marshmallow Schema, an equivalent `api.model` is generated and passed to `@api.expect`. These two can be mixed-and-matched, and the documentation will update accordingly.
