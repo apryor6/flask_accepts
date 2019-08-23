@@ -38,14 +38,35 @@ def for_swagger(schema, api, model_name: str = None):
 
 
 type_map = {
-    ma.Integer: lambda val, api, model_name: fr.Integer(),
-    ma.Number: lambda val, api, model_name: fr.Float(),
+    ma.AwareDateTime: lambda val, api, model_name: fr.Raw(),
+    ma.Bool: lambda val, api, model_name: fr.Boolean(),
+    ma.Boolean: lambda val, api, model_name: fr.Boolean(),
+    ma.Constant: lambda val, api, model_name: fr.Raw(),
+    ma.Date: lambda val, api, model_name: fr.Date(),
+    ma.DateTime: lambda val, api, model_name: fr.DateTime(),
+    ma.Decimal: lambda val, api, model_name: fr.Decimal(),
+    ma.Dict: lambda val, api, model_name: fr.Raw(),
+    ma.Email: lambda val, api, model_name: fr.String(),
     ma.Float: lambda val, api, model_name: fr.Float(),
+    ma.Function: lambda val, api, model_name: fr.Raw(),
+    ma.Int: lambda val, api, model_name: fr.Integer(),
+    ma.Integer: lambda val, api, model_name: fr.Integer(),
+    ma.Length: lambda val, api, model_name: fr.Float(),
+    ma.Mapping: lambda val, api, model_name: fr.Raw(),
+    ma.NaiveDateTime: lambda val, api, model_name: fr.DateTime(),
+    ma.Number: lambda val, api, model_name: fr.Float(),
+    ma.Pluck: lambda val, api, model_name: fr.Raw(),
+    ma.Raw: lambda val, api, model_name: fr.Raw(),
+    ma.Str: lambda val, api, model_name: fr.String(),
     ma.String: lambda val, api, model_name: fr.String(),
+    ma.Time: lambda val, api, model_name: fr.DateTime(),
+    ma.Url: lambda val, api, model_name: fr.Url(),
+    ma.URL: lambda val, api, model_name: fr.Url(),
+    ma.UUID: lambda val, api, model_name: fr.String(),
     ma.List: unpack_list,
     ma.Nested: unpack_nested,
-    SchemaMeta: for_swagger,
     Schema: for_swagger,
+    SchemaMeta: for_swagger,
 }
 
 num_default_models = 0
