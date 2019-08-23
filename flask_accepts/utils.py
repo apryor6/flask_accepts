@@ -7,7 +7,7 @@ import uuid
 
 def unpack_list(val, api):
     # Unpacks a List. Only does one level for now. Eventually should make recursive.
-    return fr.List(map_type(val.container, api))
+    return fr.List(map_type(val.inner, api))
 
 
 def unpack_nested(val, api):

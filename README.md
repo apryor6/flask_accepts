@@ -122,7 +122,7 @@ class Widget:
 
 
 class WidgetSchema(Schema):
-    foo = fields.String(100)
+    foo = fields.String()
     baz = fields.Integer()
 
     @post_load
@@ -260,7 +260,7 @@ class Widget:
 
 
 class WidgetSchema(Schema):
-    foo = fields.String(100)
+    foo = fields.String()
     baz = fields.Integer()
 
     @post_load
