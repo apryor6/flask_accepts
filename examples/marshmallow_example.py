@@ -59,7 +59,7 @@ def create_app(env=None):
             "Doodad", dict(name="some_arg", type=str), schema=DoodadSchema, api=api
         )
         @responds("Widget", schema=WidgetSchema, api=api)
-        def get(self):
+        def post(self):
             from flask import jsonify
 
             return request.parsed_obj
