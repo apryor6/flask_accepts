@@ -3,6 +3,7 @@ from flask import jsonify
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest
 from marshmallow import Schema
+from marshmallow.exceptions import ValidationError
 
 from flask_restplus.model import Model
 from flask_restplus import fields, reqparse
@@ -68,7 +69,7 @@ def accepts(
         def inner(*args, **kwargs):
             from flask import request
 
-            error = None
+            error = err = None
             # Handle arguments
             try:
                 request.parsed_args = _parser.parse_args()
@@ -77,14 +78,18 @@ def accepts(
 
             # Handle Marshmallow schema
             if schema:
-                obj, err = schema.load(request.get_json())
+                # obj, err = schema.load(request.get_json())
+                try:
+                    obj = schema.load(request.get_json())
+                    request.parsed_obj = obj
+                except ValidationError as ex:
+                    err = ex.messages
                 if err:
                     error = error or BadRequest(f"Invalid parsing error: {err}")
                     if hasattr(error, "data"):
                         error.data["errors"].update({"schema_errors": err})
                     else:
                         error.data = {"schema_errors": err}
-                request.parsed_obj = obj
 
             # If any parsing produced an error, combine them and re-raise
             if error:
@@ -176,8 +181,7 @@ def responds(
             if isinstance(rv, Response):
                 return rv
             if schema:
-                serialized = schema.dump(rv).data
-                # serialized = schema(many=many).dump(rv).data
+                serialized = schema.dump(rv)
             else:
                 from flask_restplus import marshal
 

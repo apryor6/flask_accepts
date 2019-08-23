@@ -13,7 +13,7 @@ class Widget:
 
 
 class WidgetSchema(Schema):
-    foo = fields.String(100)
+    foo = fields.String()
     baz = fields.Integer()
 
     @post_load
@@ -31,7 +31,7 @@ class Doodad:
 
 
 class DoodadSchema(Schema):
-    doodad_foo = fields.String(100)
+    doodad_foo = fields.String()
     doodad_baz = fields.Integer()
 
     @post_load
