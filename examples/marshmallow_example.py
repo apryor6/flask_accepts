@@ -1,15 +1,13 @@
+from dataclasses import dataclass
 from marshmallow import fields, Schema, post_load
 from flask import Flask, jsonify, request
 from flask_accepts import accepts, responds
 
 
+@dataclass
 class Widget:
-    def __init__(self, foo: str, baz: int):
-        self.foo = foo
-        self.baz = baz
-
-    def __repr__(self):
-        return f"<Widget(foo='{self.foo}', baz={self.baz})>"
+    foo: str
+    baz: int
 
 
 class WidgetSchema(Schema):
@@ -17,26 +15,8 @@ class WidgetSchema(Schema):
     baz = fields.Integer()
 
     @post_load
-    def make(self, kwargs):
-        return Widget(**kwargs)
-
-
-class Doodad:
-    def __init__(self, foo: str, baz: int):
-        self.foo = foo
-        self.baz = baz
-
-    def __repr__(self):
-        return f"<Doodad(foo='{self.foo}', baz={self.baz})>"
-
-
-class DoodadSchema(Schema):
-    doodad_foo = fields.String()
-    doodad_baz = fields.Integer()
-
-    @post_load
-    def make(self, kwargs):
-        return Doodad(**kwargs)
+    def make(self, data, **kwargs):
+        return Widget(**data)
 
 
 def create_app(env=None):
@@ -55,10 +35,8 @@ def create_app(env=None):
 
     @api.route("/restplus/make_a_widget")
     class WidgetResource(Resource):
-        @accepts(
-            "Doodad", dict(name="some_arg", type=str), schema=DoodadSchema, api=api
-        )
-        @responds("Widget", schema=WidgetSchema, api=api)
+        @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
+        @responds(schema=WidgetSchema, api=api)
         def post(self):
             from flask import jsonify
 
