@@ -28,7 +28,7 @@ Simple, `pip install flask_accepts`
 
 ### Basic usage
 
-Here is a basic example of an endpoint that takes a couple of URL query params and returns a new Widget
+Here is a basic example of an endpoint that takes a couple of URL query params and returns a new Widget. The `accepts` and `responds` decorators both take as positional arguments any number of dictionaries that will be passed to `flask_restful.reqparse.ArgumentParser` (see [here](https://flask-restplus.readthedocs.io/en/stable/parsing.html)). A Marshmallow schema may be passed with the `schema` parameter. These different inputs can be mixed as you see fit.
 
 ```python
 from dataclasses import dataclass
