@@ -2,9 +2,9 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.6.2-stretch-browsers
+      - image: circleci/python:3.7.4
         environment:
-          FLASK_CONFIG: testing
+          FLASK_CONFIG: test
     steps:
       - checkout
       - run: mkdir test-reports
@@ -14,7 +14,7 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
+            pip install .
             pip install pytest
       - run:
           command: |
@@ -25,3 +25,4 @@ jobs:
           destination: tr1
       - store_test_results:
           path: test-reports/
+
