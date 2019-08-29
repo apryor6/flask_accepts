@@ -9,7 +9,6 @@ jobs:
           FLASK_CONFIG: test
     steps:
       - checkout
-      - run: mkdir test-reports
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
       - run:
@@ -24,7 +23,5 @@ jobs:
             pytest --cov=flask_accepts --cov-report xml --cov-report html
       - store_artifacts:
           path: htmlcov
-      - store_test_results:
-          path: test-reports/
       - codecov/upload:
           file: coverage.xml
