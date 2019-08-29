@@ -17,15 +17,15 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install .
-            pip install pytest
+            pip install pytest pytest-cov
       - run:
           command: |
             . venv/bin/activate
-            pytest
+            pytest --cov=flask_accepts --cov-report xml
       - store_artifacts:
           path: test-reports/
           destination: tr1
       - store_test_results:
           path: test-reports/
       - codecov/upload:
-          file: { { coverage_report_filepath } }
+          file: coverage.xml
