@@ -1,6 +1,7 @@
 from flask import request
 from flask_restplus import Resource, Api
 from marshmallow import Schema, fields
+import pytest
 
 from flask_accepts.decorators import accepts, responds
 from flask_accepts.test.fixtures import app, client  # noqa
@@ -175,6 +176,17 @@ def test_bool_argument_have_correct_input(app, client):
     with client as cl:
         resp = cl.get("/test?foo=false")
         assert resp.status_code == 200
+
+
+def test_failure_when_bool_argument_is_incorrect(app, client):
+    @app.route("/test")
+    @accepts(dict(name="foo", type=bool, help="An important bool"))
+    def test():
+        pass
+
+    with client as cl:
+        resp = cl.get("/test?foo=falsee")
+        assert resp.status_code == 400
 
 
 def test_failure_when_required_arg_is_missing(app, client):  # noqa

@@ -55,8 +55,7 @@ def accepts(
             break
     for qp in query_params:
         if qp['type'] == bool:
-            _parser.add_argument(
-                qp['name'], type=inputs.boolean, location="values")
+            _parser.add_argument(qp['name'], type=inputs.boolean, location="values")
         else:
             _parser.add_argument(**qp, location="values")
 
