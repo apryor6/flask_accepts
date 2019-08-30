@@ -1,7 +1,6 @@
 from flask import request
 from flask_restplus import Resource, Api
 from marshmallow import Schema, fields
-import pytest
 
 from flask_accepts.decorators import accepts, responds
 from flask_accepts.test.fixtures import app, client  # noqa
