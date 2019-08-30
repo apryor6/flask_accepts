@@ -182,7 +182,7 @@ def test_failure_when_bool_argument_is_incorrect(app, client):
     @app.route("/test")
     @accepts(dict(name="foo", type=bool, help="An important bool"))
     def test():
-        pass
+        pass # pragma: no cover
 
     with client as cl:
         resp = cl.get("/test?foo=falsee")
