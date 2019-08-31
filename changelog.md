@@ -51,6 +51,10 @@
 
 - Fix a bug causing all models to have default names
 
-  10.0.0
+  0.10.0
 
 - Add a number of additional type supports
+
+  0.10.1
+
+- Map bool type to restful.inputs.boolean internally
