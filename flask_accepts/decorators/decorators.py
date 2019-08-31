@@ -6,7 +6,7 @@ from marshmallow import Schema
 from marshmallow.exceptions import ValidationError
 
 from flask_restplus.model import Model
-from flask_restplus import fields, reqparse
+from flask_restplus import fields, reqparse, inputs
 from flask_accepts.utils import for_swagger, get_default_model_name
 
 
@@ -54,7 +54,10 @@ def accepts(
             model_name = arg
             break
     for qp in query_params:
-        _parser.add_argument(**qp, location="values")
+        if qp['type'] == bool:
+            _parser.add_argument(qp['name'], type=inputs.boolean, location="values")
+        else:
+            _parser.add_argument(**qp, location="values")
 
     if schema:
         schema = _get_or_create_schema(schema, many=many)
