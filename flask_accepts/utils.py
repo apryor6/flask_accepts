@@ -29,40 +29,48 @@ def for_swagger(schema, api, model_name: str = None):
     """
 
     model_name = model_name or get_default_model_name()
+
+    # For nested Schemas, the internal fields are stored in _declared_fields, whereas
+    # for Schemas the name is declared_fields, so check for both.
     fields = {
         k: map_type(v, api, model_name)
-        for k, v in vars(schema).get("declared_fields", {}).items()
+        for k, v in (
+            vars(schema)
+            .get("declared_fields", vars(schema).get("_declared_fields", {}))
+            .items()
+        )
         if type(v) in type_map
     }
     return api.model(model_name, fields)
 
 
 type_map = {
-    ma.AwareDateTime: lambda val, api, model_name: fr.Raw(),
-    ma.Bool: lambda val, api, model_name: fr.Boolean(),
-    ma.Boolean: lambda val, api, model_name: fr.Boolean(),
-    ma.Constant: lambda val, api, model_name: fr.Raw(),
-    ma.Date: lambda val, api, model_name: fr.Date(),
-    ma.DateTime: lambda val, api, model_name: fr.DateTime(),
-    ma.Decimal: lambda val, api, model_name: fr.Decimal(),
-    ma.Dict: lambda val, api, model_name: fr.Raw(),
-    ma.Email: lambda val, api, model_name: fr.String(),
-    ma.Float: lambda val, api, model_name: fr.Float(),
-    ma.Function: lambda val, api, model_name: fr.Raw(),
-    ma.Int: lambda val, api, model_name: fr.Integer(),
-    ma.Integer: lambda val, api, model_name: fr.Integer(),
-    ma.Length: lambda val, api, model_name: fr.Float(),
-    ma.Mapping: lambda val, api, model_name: fr.Raw(),
-    ma.NaiveDateTime: lambda val, api, model_name: fr.DateTime(),
-    ma.Number: lambda val, api, model_name: fr.Float(),
-    ma.Pluck: lambda val, api, model_name: fr.Raw(),
-    ma.Raw: lambda val, api, model_name: fr.Raw(),
-    ma.Str: lambda val, api, model_name: fr.String(),
-    ma.String: lambda val, api, model_name: fr.String(),
-    ma.Time: lambda val, api, model_name: fr.DateTime(),
-    ma.Url: lambda val, api, model_name: fr.Url(),
-    ma.URL: lambda val, api, model_name: fr.Url(),
-    ma.UUID: lambda val, api, model_name: fr.String(),
+    ma.AwareDateTime: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.Bool: lambda val, api, model_name: fr.Boolean(example=val.default),
+    ma.Boolean: lambda val, api, model_name: fr.Boolean(example=val.default),
+    ma.Constant: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.Date: lambda val, api, model_name: fr.Date(example=val.default),
+    ma.DateTime: lambda val, api, model_name: fr.DateTime(example=val.default),
+    # For some reason, fr.Decimal has no example parameter, so use Float instead
+    ma.Decimal: lambda val, api, model_name: fr.Float(example=val.default),
+    ma.Dict: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.Email: lambda val, api, model_name: fr.String(example=val.default),
+    ma.Float: lambda val, api, model_name: fr.Float(example=val.default),
+    ma.Function: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.Int: lambda val, api, model_name: fr.Integer(example=val.default),
+    ma.Integer: lambda val, api, model_name: fr.Integer(example=val.default),
+    ma.Length: lambda val, api, model_name: fr.Float(example=val.default),
+    ma.Mapping: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.NaiveDateTime: lambda val, api, model_name: fr.DateTime(example=val.default),
+    ma.Number: lambda val, api, model_name: fr.Float(example=val.default),
+    ma.Pluck: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.Raw: lambda val, api, model_name: fr.Raw(example=val.default),
+    ma.Str: lambda val, api, model_name: fr.String(example=val.default),
+    ma.String: lambda val, api, model_name: fr.String(example=val.default),
+    ma.Time: lambda val, api, model_name: fr.DateTime(example=val.default),
+    ma.Url: lambda val, api, model_name: fr.Url(example=val.default),
+    ma.URL: lambda val, api, model_name: fr.Url(example=val.default),
+    ma.UUID: lambda val, api, model_name: fr.String(example=val.default),
     ma.List: unpack_list,
     ma.Nested: unpack_nested,
     Schema: for_swagger,

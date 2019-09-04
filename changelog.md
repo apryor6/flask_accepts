@@ -58,3 +58,7 @@
   0.10.1
 
 - Map bool type to restful.inputs.boolean internally
+
+  0.11.0
+
+- Map default values from Marshmallow Schemas to the example parameter of the generated api.model

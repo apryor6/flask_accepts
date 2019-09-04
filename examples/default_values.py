@@ -1,22 +1,24 @@
+import datetime
 from dataclasses import dataclass
 from marshmallow import fields, Schema, post_load
 from flask import Flask, jsonify, request
 from flask_accepts import accepts, responds
 
 
-@dataclass
-class Widget:
-    foo: str
-    baz: int
+class CogSchema(Schema):
+    cog_foo = fields.String(default="cog")
+    cog_baz = fields.Integer(default=999)
 
 
 class WidgetSchema(Schema):
-    foo = fields.String(default="test value")
-    baz = fields.Integer(default=422)
+    foo = fields.String(default="test string")
+    baz = fields.Integer(default=42)
+    flag = fields.Bool(default=False)
+    date = fields.Date(default="01-01-1900")
+    dec = fields.Decimal(default=42.42)
+    dct = fields.Dict(default={"key": "value"})
 
-    @post_load
-    def make(self, data, **kwargs):
-        return Widget(**data)
+    cog = fields.Nested(CogSchema)
 
 
 def create_app(env=None):
