@@ -54,8 +54,9 @@ def accepts(
             model_name = arg
             break
     for qp in query_params:
-        if qp['type'] == bool:
-            _parser.add_argument(qp['name'], type=inputs.boolean, location="values")
+        if qp["type"] == bool:
+            # mapping native bool is necessary so that string "false" is not truthy
+            _parser.add_argument(qp["name"], type=inputs.boolean, location="values")
         else:
             _parser.add_argument(**qp, location="values")
 
@@ -81,7 +82,6 @@ def accepts(
 
             # Handle Marshmallow schema
             if schema:
-                # obj, err = schema.load(request.get_json())
                 try:
                     obj = schema.load(request.get_json())
                     request.parsed_obj = obj
