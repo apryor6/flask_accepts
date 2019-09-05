@@ -32,13 +32,11 @@ def for_swagger(schema, api, model_name: str = None):
 
     # For nested Schemas, the internal fields are stored in _declared_fields, whereas
     # for Schemas the name is declared_fields, so check for both.
+    if isinstance(schema, SchemaMeta):
+        schema = schema()
     fields = {
         k: map_type(v, api, model_name)
-        for k, v in (
-            vars(schema)
-            .get("declared_fields", vars(schema).get("_declared_fields", {}))
-            .items()
-        )
+        for k, v in (vars(schema).get("fields").items())
         if type(v) in type_map
     }
     return api.model(model_name, fields)
