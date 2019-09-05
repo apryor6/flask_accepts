@@ -62,3 +62,7 @@
   0.11.0
 
 - Map default values from Marshmallow Schemas to the example parameter of the generated api.model
+
+  0.11.1
+
+- Fix a bug where excluded/only fields were not being handled properly in Swagger
