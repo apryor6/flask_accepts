@@ -30,26 +30,14 @@ def test_unpack_list_of_list():
         assert mock.call_count == 2
 
 
-def test_unpack_nested_list():
-    app = Flask(__name__)
-    api = Api(app)
-    mock_unpack_list = MagicMock(wraps=utils.unpack_list)
-    with patch(
-        "flask_accepts.utils.unpack_nested", wraps=utils.unpack_nested
-    ) as mock_unpack_nested, patch.dict(
-        "flask_accepts.utils.type_map", {ma.List: mock_unpack_list}
-    ):
-        result = utils.unpack_nested(ma.Nested(ma.List(ma.Integer())), api=api)
-
-        assert isinstance(result, fr.Nested)
-        assert mock_unpack_nested.call_count == 1
-        assert mock_unpack_list.call_count == 1
-
-
 def test_unpack_nested():
     app = Flask(__name__)
     api = Api(app)
-    result = utils.unpack_nested(ma.Nested(ma.Integer()), api=api)
+
+    class IntegerSchema(Schema):
+        my_int: ma.Integer()
+
+    result = utils.unpack_nested(ma.Nested(IntegerSchema), api=api)
 
     assert result
 

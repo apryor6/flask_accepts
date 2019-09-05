@@ -31,7 +31,8 @@ def accepts(
             to it and will not be parsed for query params
         model_name (str): the name to pass to api.Model, can optionally be provided as a str argument to *args
         schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse JSON
-            data from the request body and store in request.parsed_bj. Defaults to None.
+            data from the request body and 
+            store in request.parsed_bj. Defaults to None.
         many (bool, optional): The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True.
     
