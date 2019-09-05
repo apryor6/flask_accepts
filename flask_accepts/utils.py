@@ -6,12 +6,12 @@ import uuid
 
 
 def unpack_list(val, api, model_name: str = None):
-    model_name = model_name = get_default_model_name()
+    model_name = model_name or get_default_model_name()
     return fr.List(map_type(val.inner, api, model_name))
 
 
 def unpack_nested(val, api, model_name: str = None):
-    model_name = model_name = get_default_model_name()
+    model_name = get_default_model_name(val.nested)
     return fr.Nested(map_type(val.nested, api, model_name))
 
 
@@ -28,7 +28,7 @@ def for_swagger(schema, api, model_name: str = None):
         api.model: An equivalent api.model
     """
 
-    model_name = model_name or get_default_model_name()
+    model_name = model_name or get_default_model_name(schema)
 
     # For nested Schemas, the internal fields are stored in _declared_fields, whereas
     # for Schemas the name is declared_fields, so check for both.

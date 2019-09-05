@@ -66,3 +66,7 @@
   0.11.1
 
 - Fix a bug where excluded/only fields were not being handled properly in Swagger
+
+  0.11.2
+
+- Fix a bug where nested Schemas were using default model names where the actual name was available
