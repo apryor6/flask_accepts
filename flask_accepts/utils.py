@@ -15,7 +15,7 @@ def unpack_nested(val, api, model_name: str = None):
     return fr.Nested(map_type(val.nested, api, model_name))
 
 
-def for_swagger(schema, api, model_name: str = None):
+def for_swagger(schema, api, model_name: str = None, operation='dump'):
     """
     Convert a marshmallow schema to equivalent Flask-RESTplus model
 
@@ -34,12 +34,19 @@ def for_swagger(schema, api, model_name: str = None):
     # for Schemas the name is declared_fields, so check for both.
     if isinstance(schema, SchemaMeta):
         schema = schema()
-    fields = {
-        k: map_type(v, api, model_name)
-        for k, v in (vars(schema).get("fields").items())
-        if type(v) in type_map
-    }
-    return api.model(model_name, fields)
+    if operation == 'dump':
+        fields = {
+            k: map_type(v, api, model_name)
+            for k, v in (vars(schema).get("fields").items())
+            if type(v) in type_map and (not v.load_only)
+        }
+    else:
+        fields = {
+            k: map_type(v, api, model_name)
+            for k, v in (vars(schema).get("fields").items())
+            if type(v) in type_map and (not v.dump_only)
+        }
+    return api.model("{}-{}".format(model_name, operation), fields)
 
 
 type_map = {
