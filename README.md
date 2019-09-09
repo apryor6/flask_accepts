@@ -77,16 +77,17 @@ from flask_accepts import accepts, responds
 
 from .widget import Widget, WidgetSchema, make_widget
 
+
 def create_app():
     app = Flask(__name__)
 
     @app.route("/widget")
-    @accepts(dict(name="foo", type=str), api=api)
-    @responds(schema=WidgetSchema, api=api)
-    def widget()
+    @accepts(dict(name="foo", type=str))
+    @responds(schema=WidgetSchema)
+    def widget():
         name: str = request.parsed_args["foo"]
-	widget: Widget = make_widget(name)
-	return widget
+        widget: Widget = make_widget(name)
+        return widget
 
     return app
 ```
