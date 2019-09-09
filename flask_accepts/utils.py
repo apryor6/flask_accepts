@@ -34,14 +34,13 @@ def for_swagger(schema, api, model_name: str = None, operation="dump"):
     # for Schemas the name is declared_fields, so check for both.
     if isinstance(schema, SchemaMeta):
         schema = schema()
-
     fields = {
         k: map_type(v, api, model_name)
         for k, v in (vars(schema).get("fields").items())
         if type(v) in type_map and _check_load_dump_only(v, operation)
     }
 
-    return api.model("{}-{}".format(model_name, operation), fields)
+    return api.model(f"{model_name}-{operation}", fields)
 
 
 def _check_load_dump_only(field: ma.Field, operation: str) -> bool:
