@@ -70,3 +70,7 @@
   0.11.2
 
 - Fix a bug where nested Schemas were using default model names where the actual name was available
+
+  0.12.0
+
+- Implement load_only and dump_only suppoort for Marshmallow schemas
