@@ -112,7 +112,7 @@ def accepts(
                         schema=schema,
                         model_name=model_name or get_default_model_name(schema),
                         api=api,
-                        operation='load'
+                        operation="load",
                     ),
                 )(inner)
             elif _parser:
@@ -203,7 +203,9 @@ def responds(
         if api and use_swagger and _IS_METHOD:
             if schema:
                 inner = _document_like_marshal_with(
-                    for_swagger(schema=schema, model_name=model_name, api=api, operation='dump'),
+                    for_swagger(
+                        schema=schema, model_name=model_name, api=api, operation="dump"
+                    ),
                     status_code=status_code,
                     description=description,
                 )(inner)
