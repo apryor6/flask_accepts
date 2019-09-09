@@ -7,8 +7,8 @@ from flask_accepts import accepts, responds
 
 class WidgetSchema(Schema):
     id = fields.Integer()
-    created_at = fields.DateTime()
-    foo = fields.String()
+    created_at = fields.DateTime(dump_only=True)
+    foo = fields.String(load_only=True)
     baz = fields.Integer()
 
 
@@ -18,8 +18,8 @@ def create_app():
 
     @api.route("/widget")
     class WidgetResource(Resource):
-        @accepts(schema=WidgetSchema(dump_only=["created_at"]), api=api)
-        @responds(schema=WidgetSchema(load_only=["foo"]), api=api)
+        @accepts(schema=WidgetSchema, api=api)
+        @responds(schema=WidgetSchema, api=api)
         def post(self):
             # save data to a new record, and return ID
             return request.parsed_obj
