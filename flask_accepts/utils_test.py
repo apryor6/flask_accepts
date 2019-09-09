@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
+import pytest
 from marshmallow import Schema, fields as ma
 from flask import Flask
 from flask_restplus import Resource, Api, fields as fr
@@ -85,3 +87,44 @@ def test_get_default_model_name_default_names():
         result = get_default_model_name()
         expected = f"DefaultResponseModel_{model_num + num_default_models}"
         assert result == expected
+
+
+def test__check_load_dump_only_on_dump():
+    @dataclass
+    class FakeField:
+        load_only: bool
+        dump_only: bool
+
+    assert not utils._check_load_dump_only(
+        FakeField(load_only=True, dump_only=False), "dump"
+    )
+    assert utils._check_load_dump_only(
+        FakeField(load_only=False, dump_only=True), "dump"
+    )
+
+
+def test__check_load_dump_only_on_load():
+    @dataclass
+    class FakeField:
+        load_only: bool
+        dump_only: bool
+
+    assert utils._check_load_dump_only(
+        FakeField(load_only=True, dump_only=False), "load"
+    )
+    assert not utils._check_load_dump_only(
+        FakeField(load_only=False, dump_only=True), "load"
+    )
+
+
+def test__check_load_dump_only_raises_on_invalid_operation():
+    @dataclass
+    class FakeField:
+        load_only: bool
+        dump_only: bool
+
+    with pytest.raises(ValueError):
+        utils._check_load_dump_only(
+            FakeField(load_only=True, dump_only=False), "not an operation"
+        )
+
