@@ -15,7 +15,7 @@ def unpack_nested(val, api, model_name: str = None):
     return fr.Nested(map_type(val.nested, api, model_name))
 
 
-def for_swagger(schema, api, model_name: str = None, operation='dump'):
+def for_swagger(schema, api, model_name: str = None, operation="dump"):
     """
     Convert a marshmallow schema to equivalent Flask-RESTplus model
 
@@ -34,19 +34,25 @@ def for_swagger(schema, api, model_name: str = None, operation='dump'):
     # for Schemas the name is declared_fields, so check for both.
     if isinstance(schema, SchemaMeta):
         schema = schema()
-    if operation == 'dump':
-        fields = {
-            k: map_type(v, api, model_name)
-            for k, v in (vars(schema).get("fields").items())
-            if type(v) in type_map and (not v.load_only)
-        }
-    else:
-        fields = {
-            k: map_type(v, api, model_name)
-            for k, v in (vars(schema).get("fields").items())
-            if type(v) in type_map and (not v.dump_only)
-        }
+
+    fields = {
+        k: map_type(v, api, model_name)
+        for k, v in (vars(schema).get("fields").items())
+        if type(v) in type_map and _check_load_dump_only(v, operation)
+    }
+
     return api.model("{}-{}".format(model_name, operation), fields)
+
+
+def _check_load_dump_only(field: ma.Field, operation: str) -> bool:
+    if operation == "dump":
+        return not field.load_only
+    elif operation == "load":
+        return not field.dump_only
+    else:
+        raise ValueError(
+            f"Invalid operation: {operation}. Options are 'load' and 'dump'."
+        )
 
 
 type_map = {
