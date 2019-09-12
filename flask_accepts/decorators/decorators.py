@@ -225,12 +225,14 @@ def _check_deprecate_many(many: bool = False):
     if many:
         import warnings
 
+        warnings.simplefilter("always", DeprecationWarning)
         warnings.warn(
             "The 'many' parameter is deprecated in favor of passing these "
             "arguments to an actual instance of Marshmallow schema (i.e. "
             "prefer @responds(schema=MySchema(many=True)) instead of "
             "@responds(schema=MySchema, many=True))",
             DeprecationWarning,
+            stacklevel=3,
         )
 
 

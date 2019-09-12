@@ -74,3 +74,7 @@
   0.12.0
 
 - Implement load_only and dump_only suppoort for Marshmallow schemas
+
+  0.12.11
+
+- Add a deprecation warning
