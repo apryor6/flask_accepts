@@ -44,6 +44,36 @@ def test_unpack_nested():
     assert result
 
 
+def test_unpack_nested_self():
+    app = Flask(__name__)
+    api = Api(app)
+
+    class IntegerSchema(Schema):
+        my_int = ma.Integer()
+        children = ma.Nested("self", exclude=["children"])
+
+    schema = IntegerSchema()
+
+    result = utils.unpack_nested(schema.fields.get("children"), api=api)
+
+    assert type(result) == fr.Nested
+
+
+def test_unpack_nested_self_many():
+    app = Flask(__name__)
+    api = Api(app)
+
+    class IntegerSchema(Schema):
+        my_int = ma.Integer()
+        children = ma.Nested("self", exclude=["children"], many=True)
+
+    schema = IntegerSchema()
+
+    result = utils.unpack_nested(schema.fields.get("children"), api=api)
+
+    assert type(result) == fr.List
+
+
 def test_get_default_model_name():
     from .utils import get_default_model_name
 
