@@ -56,7 +56,14 @@ def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
         if type(v) in type_map and _check_load_dump_only(v, operation)
     }
 
-    return api.model(f"{model_name}-{operation}", fields)
+    model_name = _maybe_add_operation(schema, model_name, operation)
+    return api.model(model_name, fields)
+
+
+def _maybe_add_operation(schema, model_name: str, operation: str):
+    if any(f.load_only or f.dump_only for k, f in (vars(schema).get("fields").items())):
+        return f"{model_name}-{operation}"
+    return f"{model_name}"
 
 
 def _check_load_dump_only(field: ma.Field, operation: str) -> bool:

@@ -158,3 +158,63 @@ def test__check_load_dump_only_raises_on_invalid_operation():
             FakeField(load_only=True, dump_only=False), "not an operation"
         )
 
+
+def test__maybe_add_operation_passes_through_if_no_load_only():
+    from flask_accepts.utils import _maybe_add_operation
+
+    class TestSchema(Schema):
+        _id = ma.Integer()
+
+    model_name = "TestSchema"
+    operation = "load"
+
+    result = _maybe_add_operation(TestSchema(), model_name, operation)
+
+    expected = model_name
+    assert result == expected
+
+
+def test__maybe_add_operation_append_if_load_only():
+    from flask_accepts.utils import _maybe_add_operation
+
+    class TestSchema(Schema):
+        _id = ma.Integer(load_only=True)
+
+    model_name = "TestSchema"
+    operation = "load"
+
+    result = _maybe_add_operation(TestSchema(), model_name, operation)
+
+    expected = f"{model_name}-load"
+    assert result == expected
+
+
+def test__maybe_add_operation_passes_through_if_no_dump_only():
+    from flask_accepts.utils import _maybe_add_operation
+
+    class TestSchema(Schema):
+        _id = ma.Integer()
+
+    model_name = "TestSchema"
+    operation = "dump"
+
+    result = _maybe_add_operation(TestSchema(), model_name, operation)
+
+    expected = model_name
+    assert result == expected
+
+
+def test__maybe_add_operation_append_if_dump_only():
+    from flask_accepts.utils import _maybe_add_operation
+
+    class TestSchema(Schema):
+        _id = ma.Integer(dump_only=True)
+
+    model_name = "TestSchema"
+    operation = "dump"
+
+    result = _maybe_add_operation(TestSchema(), model_name, operation)
+
+    expected = f"{model_name}-dump"
+    assert result == expected
+
