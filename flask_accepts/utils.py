@@ -7,7 +7,9 @@ import uuid
 
 def unpack_list(val, api, model_name: str = None, operation: str = "dump"):
     model_name = model_name or get_default_model_name()
-    return fr.List(map_type(val.inner, api, model_name, operation))
+    return fr.List(
+        map_type(val.inner, api, model_name, operation), **_ma_field_to_fr_field(val)
+    )
 
 
 def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
@@ -15,7 +17,9 @@ def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
         return unpack_nested_self(val, api, model_name, operation)
 
     model_name = get_default_model_name(val.nested)
-    return fr.Nested(map_type(val.nested, api, model_name, operation))
+    return fr.Nested(
+        map_type(val.nested, api, model_name, operation), **_ma_field_to_fr_field(val)
+    )
 
 
 def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"):
@@ -26,9 +30,13 @@ def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"
         if type(v) in type_map and _check_load_dump_only(v, operation)
     }
     if val.many:
-        return fr.List(fr.Nested(api.model(f"{model_name}-child", fields)))
+        return fr.List(
+            fr.Nested(api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val))
+        )
     else:
-        return fr.Nested(api.model(f"{model_name}-child", fields))
+        return fr.Nested(
+            api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val)
+        )
 
 
 def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
@@ -72,37 +80,81 @@ def _check_load_dump_only(field: ma.Field, operation: str) -> bool:
 
 type_map = {
     ma.AwareDateTime: lambda val, api, model_name, operation: fr.Raw(
-        example=val.default
+        **_ma_field_to_fr_field(val)
     ),
-    ma.Bool: lambda val, api, model_name, operation: fr.Boolean(example=val.default),
-    ma.Boolean: lambda val, api, model_name, operation: fr.Boolean(example=val.default),
-    ma.Constant: lambda val, api, model_name, operation: fr.Raw(example=val.default),
-    ma.Date: lambda val, api, model_name, operation: fr.Date(example=val.default),
+    ma.Bool: lambda val, api, model_name, operation: fr.Boolean(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Boolean: lambda val, api, model_name, operation: fr.Boolean(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Constant: lambda val, api, model_name, operation: fr.Raw(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Date: lambda val, api, model_name, operation: fr.Date(
+        **_ma_field_to_fr_field(val)
+    ),
     ma.DateTime: lambda val, api, model_name, operation: fr.DateTime(
-        example=val.default
+        **_ma_field_to_fr_field(val)
     ),
     # For some reason, fr.Decimal has no example parameter, so use Float instead
-    ma.Decimal: lambda val, api, model_name, operation: fr.Float(example=val.default),
-    ma.Dict: lambda val, api, model_name, operation: fr.Raw(example=val.default),
-    ma.Email: lambda val, api, model_name, operation: fr.String(example=val.default),
-    ma.Float: lambda val, api, model_name, operation: fr.Float(example=val.default),
-    ma.Function: lambda val, api, model_name, operation: fr.Raw(example=val.default),
-    ma.Int: lambda val, api, model_name, operation: fr.Integer(example=val.default),
-    ma.Integer: lambda val, api, model_name, operation: fr.Integer(example=val.default),
-    ma.Length: lambda val, api, model_name, operation: fr.Float(example=val.default),
-    ma.Mapping: lambda val, api, model_name, operation: fr.Raw(example=val.default),
-    ma.NaiveDateTime: lambda val, api, model_name, operation: fr.DateTime(
-        example=val.default
+    ma.Decimal: lambda val, api, model_name, operation: fr.Float(
+        **_ma_field_to_fr_field(val)
     ),
-    ma.Number: lambda val, api, model_name, operation: fr.Float(example=val.default),
-    ma.Pluck: lambda val, api, model_name, operation: fr.Raw(example=val.default),
-    ma.Raw: lambda val, api, model_name, operation: fr.Raw(example=val.default),
-    ma.Str: lambda val, api, model_name, operation: fr.String(example=val.default),
-    ma.String: lambda val, api, model_name, operation: fr.String(example=val.default),
-    ma.Time: lambda val, api, model_name, operation: fr.DateTime(example=val.default),
-    ma.Url: lambda val, api, model_name, operation: fr.Url(example=val.default),
-    ma.URL: lambda val, api, model_name, operation: fr.Url(example=val.default),
-    ma.UUID: lambda val, api, model_name, operation: fr.String(example=val.default),
+    ma.Dict: lambda val, api, model_name, operation: fr.Raw(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Email: lambda val, api, model_name, operation: fr.String(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Float: lambda val, api, model_name, operation: fr.Float(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Function: lambda val, api, model_name, operation: fr.Raw(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Int: lambda val, api, model_name, operation: fr.Integer(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Integer: lambda val, api, model_name, operation: fr.Integer(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Length: lambda val, api, model_name, operation: fr.Float(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Mapping: lambda val, api, model_name, operation: fr.Raw(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.NaiveDateTime: lambda val, api, model_name, operation: fr.DateTime(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Number: lambda val, api, model_name, operation: fr.Float(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Pluck: lambda val, api, model_name, operation: fr.Raw(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Raw: lambda val, api, model_name, operation: fr.Raw(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Str: lambda val, api, model_name, operation: fr.String(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.String: lambda val, api, model_name, operation: fr.String(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Time: lambda val, api, model_name, operation: fr.DateTime(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.Url: lambda val, api, model_name, operation: fr.Url(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.URL: lambda val, api, model_name, operation: fr.Url(
+        **_ma_field_to_fr_field(val)
+    ),
+    ma.UUID: lambda val, api, model_name, operation: fr.String(
+        **_ma_field_to_fr_field(val)
+    ),
     ma.List: unpack_list,
     ma.Nested: unpack_nested,
     Schema: for_swagger,
@@ -124,6 +176,24 @@ def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None)
     name = f"DefaultResponseModel_{num_default_models}"
     num_default_models += 1
     return name
+
+
+def _ma_field_to_fr_field(value: ma.Field) -> dict:
+    fr_field_parameters = {}
+
+    if hasattr(value, 'default'):
+        fr_field_parameters['example'] = value.default
+
+    if hasattr(value, 'required'):
+        fr_field_parameters['required'] = value.required
+
+    if hasattr(value, 'metadata') and 'description' in value.metadata:
+        fr_field_parameters['description'] = value.metadata['description']
+
+    if hasattr(value, 'missing') and type(value.missing) != ma.utils._Missing:
+        fr_field_parameters['default'] = value.missing
+
+    return fr_field_parameters
 
 
 def map_type(val, api, model_name, operation):
