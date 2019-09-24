@@ -78,3 +78,7 @@
   0.12.11
 
 - Add a deprecation warning
+
+  0.13.0
+
+- Enable "self" parameter for nested Marshmallow schemas 
