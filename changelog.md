@@ -78,3 +78,7 @@
   0.12.11
 
 - Add a deprecation warning
+
+  0.14.0
+
+- Only append model names with the operation if necessary for prettier resulting model names in most cases
