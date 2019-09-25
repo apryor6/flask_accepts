@@ -31,7 +31,9 @@ def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"
     }
     if val.many:
         return fr.List(
-            fr.Nested(api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val))
+            fr.Nested(
+                api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val)
+            )
         )
     else:
         return fr.Nested(
@@ -78,88 +80,57 @@ def _check_load_dump_only(field: ma.Field, operation: str) -> bool:
         )
 
 
+def make_type_mapper(field_type):
+    """Factory for creating mapping functions for `type_map` with additional
+    marshmallow fields, if present"""
+
+    def mapper(val, api, model_name, operation):
+        return field_type(**_ma_field_to_fr_field(val))
+
+    return mapper
+
+
 type_map = {
-    ma.AwareDateTime: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Bool: lambda val, api, model_name, operation: fr.Boolean(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Boolean: lambda val, api, model_name, operation: fr.Boolean(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Constant: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Date: lambda val, api, model_name, operation: fr.Date(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.DateTime: lambda val, api, model_name, operation: fr.DateTime(
-        **_ma_field_to_fr_field(val)
-    ),
+    ma.AwareDateTime: fr.Raw,
+    ma.Bool: fr.Boolean,
+    ma.Boolean: fr.Boolean,
+    ma.Constant: fr.Raw,
+    ma.Date: fr.Date,
+    ma.DateTime: fr.DateTime,
     # For some reason, fr.Decimal has no example parameter, so use Float instead
-    ma.Decimal: lambda val, api, model_name, operation: fr.Float(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Dict: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Email: lambda val, api, model_name, operation: fr.String(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Float: lambda val, api, model_name, operation: fr.Float(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Function: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Int: lambda val, api, model_name, operation: fr.Integer(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Integer: lambda val, api, model_name, operation: fr.Integer(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Length: lambda val, api, model_name, operation: fr.Float(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Mapping: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.NaiveDateTime: lambda val, api, model_name, operation: fr.DateTime(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Number: lambda val, api, model_name, operation: fr.Float(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Pluck: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Raw: lambda val, api, model_name, operation: fr.Raw(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Str: lambda val, api, model_name, operation: fr.String(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.String: lambda val, api, model_name, operation: fr.String(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Time: lambda val, api, model_name, operation: fr.DateTime(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.Url: lambda val, api, model_name, operation: fr.Url(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.URL: lambda val, api, model_name, operation: fr.Url(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.UUID: lambda val, api, model_name, operation: fr.String(
-        **_ma_field_to_fr_field(val)
-    ),
-    ma.List: unpack_list,
-    ma.Nested: unpack_nested,
-    Schema: for_swagger,
-    SchemaMeta: for_swagger,
+    ma.Decimal: fr.Float,
+    ma.Dict: fr.Raw,
+    ma.Email: fr.String,
+    ma.Float: fr.Float,
+    ma.Function: fr.Raw,
+    ma.Int: fr.Integer,
+    ma.Integer: fr.Integer,
+    ma.Length: fr.Float,
+    ma.Mapping: fr.Raw,
+    ma.NaiveDateTime: fr.DateTime,
+    ma.Number: fr.Float,
+    ma.Pluck: fr.Raw,
+    ma.Raw: fr.Raw,
+    ma.Str: fr.String,
+    ma.String: fr.String,
+    ma.Time: fr.DateTime,
+    ma.Url: fr.Url,
+    ma.URL: fr.Url,
+    ma.UUID: fr.String,
 }
+
+
+type_map = {k: make_type_mapper(v) for k, v in type_map.items()}
+
+# Add in the special cases
+type_map.update(
+    {
+        ma.List: unpack_list,
+        ma.Nested: unpack_nested,
+        Schema: for_swagger,
+        SchemaMeta: for_swagger,
+    }
+)
 
 num_default_models = 0
 
@@ -181,17 +152,17 @@ def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None)
 def _ma_field_to_fr_field(value: ma.Field) -> dict:
     fr_field_parameters = {}
 
-    if hasattr(value, 'default'):
-        fr_field_parameters['example'] = value.default
+    if hasattr(value, "default"):
+        fr_field_parameters["example"] = value.default
 
-    if hasattr(value, 'required'):
-        fr_field_parameters['required'] = value.required
+    if hasattr(value, "required"):
+        fr_field_parameters["required"] = value.required
 
-    if hasattr(value, 'metadata') and 'description' in value.metadata:
-        fr_field_parameters['description'] = value.metadata['description']
+    if hasattr(value, "metadata") and "description" in value.metadata:
+        fr_field_parameters["description"] = value.metadata["description"]
 
-    if hasattr(value, 'missing') and type(value.missing) != ma.utils._Missing:
-        fr_field_parameters['default'] = value.missing
+    if hasattr(value, "missing") and type(value.missing) != ma.utils._Missing:
+        fr_field_parameters["default"] = value.missing
 
     return fr_field_parameters
 
