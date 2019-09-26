@@ -159,6 +159,115 @@ def test__check_load_dump_only_raises_on_invalid_operation():
         )
 
 
+def test__ma_field_to_fr_field_converts_required_param_if_present():
+    @dataclass
+    class FakeFieldWithRequired(ma.Field):
+        required: bool
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldWithRequired(required=True))
+    assert fr_field_dict["required"] is True
+
+    @dataclass
+    class FakeFieldNoRequired(ma.Field):
+        pass
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldNoRequired())
+    assert "required" not in fr_field_dict
+
+
+def test__ma_field_to_fr_field_converts_missing_param_to_default_if_present():
+    @dataclass
+    class FakeFieldWithMissing(ma.Field):
+        missing: bool
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldWithMissing(missing=True))
+    assert fr_field_dict["default"] is True
+
+    @dataclass
+    class FakeFieldNoMissing(ma.Field):
+        pass
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldNoMissing())
+    assert "default" not in fr_field_dict
+
+
+def test__ma_field_to_fr_field_converts_metadata_param_to_description_if_present():
+    @dataclass
+    class FakeFieldWithDescription(ma.Field):
+        metadata: dict
+
+    expected_description = "test"
+
+    fr_field_dict = utils._ma_field_to_fr_field(
+        FakeFieldWithDescription(metadata={"description": expected_description})
+    )
+    assert fr_field_dict["description"] == expected_description
+
+    @dataclass
+    class FakeFieldNoMetaData(ma.Field):
+        pass
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldNoMetaData())
+    assert "description" not in fr_field_dict
+
+    @dataclass
+    class FakeFieldNoDescription(ma.Field):
+        metadata: dict
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldNoDescription(metadata={}))
+    assert "description" not in fr_field_dict
+
+
+def test__ma_field_to_fr_field_converts_default_to_example_if_present():
+    @dataclass
+    class FakeFieldWithDefault(ma.Field):
+        default: str
+
+    expected_example_value = "test"
+
+    fr_field_dict = utils._ma_field_to_fr_field(
+        FakeFieldWithDefault(default=expected_example_value)
+    )
+    assert fr_field_dict["example"] == expected_example_value
+
+    @dataclass
+    class FakeFieldNoDefault(ma.Field):
+        pass
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldNoDefault())
+    assert "example" not in fr_field_dict
+
+
+def test__ma_field_to_fr_field_returns_empty_dict_for_no_params_present_in_ma_field():
+    @dataclass
+    class FakeFieldWithNoParams(ma.Field):
+        pass
+
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldWithNoParams())
+    assert not fr_field_dict
+
+
+def test_make_type_mapper_works_with_required():
+    from flask_accepts.utils import make_type_mapper
+
+    app = Flask(__name__)
+    api = Api(app)
+
+    mapper = make_type_mapper(fr.Raw)
+    result = mapper(ma.Raw(required=True), api=api, model_name='test_model_name', operation='load')
+    assert result.required
+
+def test_make_type_mapper_produces_nonrequired_param_by_default():
+    from flask_accepts.utils import make_type_mapper
+
+    app = Flask(__name__)
+    api = Api(app)
+
+    mapper = make_type_mapper(fr.Raw)
+    result = mapper(ma.Raw(), api=api, model_name='test_model_name', operation='load')
+    assert not result.required
+
+
 def test__maybe_add_operation_passes_through_if_no_load_only():
     from flask_accepts.utils import _maybe_add_operation
 
