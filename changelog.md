@@ -86,3 +86,7 @@
   0.14.0
 
 - Only append model names with the operation if necessary for prettier resulting model names in most cases
+
+  0.14.1
+
+- Add 'required', 'default' and 'description' fields to result Swagger docs
