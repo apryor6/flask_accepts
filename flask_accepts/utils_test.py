@@ -1,9 +1,11 @@
-from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
 import pytest
+
+from dataclasses import dataclass
+from unittest.mock import patch, Mock
 from marshmallow import Schema, fields as ma
+
 from flask import Flask
-from flask_restplus import Resource, Api, fields as fr
+from flask_restplus import Api, fields as fr, namespace
 
 # from .utils import unpack_list, unpack_nested
 import flask_accepts.utils as utils
@@ -257,6 +259,7 @@ def test_make_type_mapper_works_with_required():
     result = mapper(ma.Raw(required=True), api=api, model_name='test_model_name', operation='load')
     assert result.required
 
+
 def test_make_type_mapper_produces_nonrequired_param_by_default():
     from flask_accepts.utils import make_type_mapper
 
@@ -327,3 +330,55 @@ def test__maybe_add_operation_append_if_dump_only():
     expected = f"{model_name}-dump"
     assert result == expected
 
+
+def test_map_type_calls_type_map_dict_function_for_known_type_with_correct_parameters():
+    expected_ma_field = ma.Float
+    expected_model_name, expected_operation, expected_namespace = _get_type_mapper_default_params()
+
+    float_type_mapper = Mock()
+    type_map_mock = {
+        type(expected_ma_field): float_type_mapper
+    }
+
+    type_map_patch = patch.object(utils, 'type_map', new=type_map_mock)
+
+    with type_map_patch:
+        utils.map_type(expected_ma_field, expected_namespace, expected_model_name, expected_operation)
+        float_type_mapper.assert_called_with(
+            expected_ma_field, expected_namespace, expected_model_name, expected_operation
+        )
+
+
+def test_map_type_calls_type_map_dict_function_for_schema_instance():
+    class MarshmallowSchema(Schema):
+        test_field: ma.Float
+
+    expected_ma_field = MarshmallowSchema()
+    expected_model_name, expected_operation, expected_namespace = _get_type_mapper_default_params()
+
+    schema_type_mapper_mock = Mock()
+    type_map_mock = dict(utils.type_map)
+    type_map_mock[Schema] = schema_type_mapper_mock
+
+    type_map_patch = patch.object(utils, 'type_map', new=type_map_mock)
+
+    with type_map_patch:
+        utils.map_type(expected_ma_field, expected_namespace, expected_model_name, expected_operation)
+        schema_type_mapper_mock.assert_called_with(
+            expected_ma_field, expected_namespace, expected_model_name, expected_operation
+        )
+
+
+def test_map_type_raises_error_for_unknown_type():
+    class UnknownType:
+        test_field: ma.Float
+
+    unknown_ma_field = UnknownType
+    expected_model_name, expected_operation, expected_namespace = _get_type_mapper_default_params()
+
+    with pytest.raises(TypeError):
+        utils.map_type(unknown_ma_field, expected_namespace, expected_model_name, expected_operation)
+
+
+def _get_type_mapper_default_params():
+    return 'test-model', 'test-operation', namespace.Namespace('test-ns')

@@ -90,3 +90,7 @@
   0.14.1
 
 - Add 'required', 'default' and 'description' fields to result Swagger docs
+
+  0.14.2
+
+- Add support for schema instances in marshmallow nested fields. 
