@@ -19,6 +19,10 @@ class WidgetSchema(Schema):
         return Widget(**data)
 
 
+class WidgetList(Schema):
+    widgets = fields.List(fields.Nested(WidgetSchema))
+
+
 def create_app(env=None):
     from flask_restplus import Api, Namespace, Resource
 
@@ -30,10 +34,13 @@ def create_app(env=None):
         @accepts(
             dict(name="some_arg", type=str), schema=WidgetSchema(many=True), api=api
         )
+        # @accepts(dict(name="some_arg", type=str), schema=WidgetList, api=api)
+        # @responds(schema=WidgetList, api=api)
         @responds(schema=WidgetSchema(many=True), api=api)
         def post(self):
             from flask import jsonify
 
+            # return request.parsed_obj["widgets"]
             return request.parsed_obj
 
     return app

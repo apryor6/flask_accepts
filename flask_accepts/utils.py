@@ -35,13 +35,14 @@ def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"
                 api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val)
             )
         )
-    else:
-        return fr.Nested(
-            api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val)
-        )
+    return fr.Nested(
+        api.model(f"{model_name}-child", fields), **_ma_field_to_fr_field(val)
+    )
 
 
-def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
+def for_swagger(
+    schema, api, model_name: str = None, operation: str = "dump", is_top_level=False
+):
     """
     Convert a marshmallow schema to equivalent Flask-RESTplus model
 
@@ -65,7 +66,35 @@ def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
     }
 
     model_name = _maybe_add_operation(schema, model_name, operation)
+    if schema.many and is_top_level:
+        print("schema.many")
+        # single_model = api.model(model_name, fields)
+        # return api.model(model_name, {"widget": fr.List(fr.Nested(single_model))})
+        # single_model = api.model(model_name, fields)
+        fields = _maybe_wrap_many(fields, schema, model_name)
+        _ = api.model(
+            # model_name, {"widget": fr.List(fr.Nested(api.model(model_name, fields)))}
+            model_name + "s",
+            {"widget": fr.List(fr.Nested(fields))},
+        )
+    # # if schema.many:
+    # # return api.model(_get_many_model_name(model_name), fields)
+    # # return api.model(model_name, {"Widget": fr.List(fr.Nested(fields))})
     return api.model(model_name, fields)
+
+
+def _get_many_model_name(name: str) -> str:
+    """Convert model_name to plural for case where many=True"""
+    return name.lower() + "s"
+
+
+def _maybe_wrap_many(fields, schema, model_name: str):
+    """If many=True for the schema, wrap model in a Nested List"""
+    return fields
+    if not schema.many:
+        return fields
+    key = _get_many_model_name(model_name)
+    return {key: fr.List(fr.Nested(fields))}
 
 
 def _maybe_add_operation(schema, model_name: str, operation: str):
