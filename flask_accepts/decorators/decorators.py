@@ -1,7 +1,7 @@
 from typing import Type, Union
 from flask import jsonify
 from werkzeug.wrappers import Response
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, InternalServerError
 from marshmallow import Schema
 from marshmallow.exceptions import ValidationError
 
@@ -31,11 +31,11 @@ def accepts(
             to it and will not be parsed for query params
         model_name (str): the name to pass to api.Model, can optionally be provided as a str argument to *args
         schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse JSON
-            data from the request body and 
+            data from the request body and
             store in request.parsed_bj. Defaults to None.
         many (bool, optional): The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True.
-    
+
     Returns:
         The wrapped route
     """
@@ -129,22 +129,22 @@ def responds(
     many: bool = False,
     api=None,
     status_code: int = 200,
-    validate: bool = True,
+    validate: bool = False,
     description: str = None,
     use_swagger: bool = True,
 ):
     """
     Serialize the output of a function using the Marshmallow schema to dump the results.
     Note that `schema` should be the type, not an instance -- the `responds` decorator
-    will internally handle creation of the schema. If the outputted value is already of 
+    will internally handle creation of the schema. If the outputted value is already of
     type flask.Response, it will be passed along without further modification.
-    
+
     Args:
         schema (bool, optional): Marshmallow schema with which to serialize the output
             of the wrapped function.
         many (bool, optional): (DEPRECATED) The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True.
-    
+
     Returns:
         The output of schema(many=many).dumps(<return value>) of the wrapped function
     """
@@ -188,6 +188,13 @@ def responds(
             if isinstance(rv, Response):
                 return rv
             if schema:
+                # Validate data if asked to (throws)
+                if validate:
+                    errs = schema.validate(rv)
+                    if errs:
+                        raise InternalServerError(
+                            description='Server attempted to return invalid data'
+                        )
                 serialized = schema.dump(rv)
             else:
                 from flask_restplus import marshal
