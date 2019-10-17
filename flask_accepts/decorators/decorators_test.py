@@ -493,3 +493,22 @@ def test_accepts_with_twice_nested_schema(app, client):  # noqa
         )
         assert resp.status_code == 200
 
+def test_responds_with_validate(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer(required=True)
+        name = fields.String(required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api, validate=True)
+        def get(self):
+            obj = {"wrong_field": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert resp.status_code == 500
+        assert resp.json == {'message': 'Server attempted to return invalid data'}
