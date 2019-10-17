@@ -94,3 +94,7 @@
   0.14.2
 
 - Add support for schema instances in marshmallow nested fields. 
+
+  0.15.0
+
+- Add support for `validate` parameter on `@responds`
