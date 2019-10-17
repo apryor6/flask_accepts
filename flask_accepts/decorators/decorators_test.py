@@ -181,7 +181,7 @@ def test_failure_when_bool_argument_is_incorrect(app, client):
     @app.route("/test")
     @accepts(dict(name="foo", type=bool, help="An important bool"))
     def test():
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     with client as cl:
         resp = cl.get("/test?foo=falsee")
@@ -493,22 +493,29 @@ def test_accepts_with_twice_nested_schema(app, client):  # noqa
         )
         assert resp.status_code == 200
 
+
 def test_responds_with_validate(app, client):  # noqa
+    import pytest
+    from flask import jsonify
+    from werkzeug.exceptions import InternalServerError
+
     class TestSchema(Schema):
         _id = fields.Integer(required=True)
         name = fields.String(required=True)
 
-    api = Api(app)
+    @app.errorhandler(InternalServerError)
+    def payload_validation_failure(err):
+        return jsonify({"message": "Server attempted to return invalid data"}), 500
 
-    @api.route("/test")
-    class TestResource(Resource):
-        @responds(schema=TestSchema, api=api, validate=True)
-        def get(self):
-            obj = {"wrong_field": 42, "name": "Jon Snow"}
-            return obj
+    @app.route("/test")
+    @responds(schema=TestSchema, validate=True)
+    def get():
+        obj = {"wrong_field": 42, "name": "Jon Snow"}
+        return obj
 
-    with client as cl:
+    with app.test_client() as cl:
         resp = cl.get("/test")
         obj = resp.json
         assert resp.status_code == 500
-        assert resp.json == {'message': 'Server attempted to return invalid data'}
+        assert resp.json == {"message": "Server attempted to return invalid data"}
+

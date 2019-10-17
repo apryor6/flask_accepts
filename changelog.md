@@ -98,3 +98,6 @@
   0.15.0
 
 - Add support for `validate` parameter on `@responds`
+  0.15.1
+
+- Patch a broken test
