@@ -55,6 +55,8 @@ def accepts(
             model_name = arg
             break
     for qp in query_params:
+        if 'location' in qp:
+            continue
         if qp["type"] == bool:
             # mapping native bool is necessary so that string "false" is not truthy
             _parser.add_argument(qp["name"], type=inputs.boolean, location="values")
