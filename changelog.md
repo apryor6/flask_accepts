@@ -101,3 +101,7 @@
   0.15.1
 
 - Patch a broken test
+
+  0.15.2
+
+- Fix a bug where providing the location explicitly threw an exception
