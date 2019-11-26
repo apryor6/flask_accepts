@@ -519,3 +519,35 @@ def test_responds_with_validate(app, client):  # noqa
         assert resp.status_code == 500
         assert resp.json == {"message": "Server attempted to return invalid data"}
 
+
+def test_responds_with_validate(app, client):  # noqa
+    import pytest
+    from flask import jsonify
+    from werkzeug.exceptions import InternalServerError
+
+    class TestDataObj:
+        def __init__(self, wrong_field, name):
+            self.wrong_field = wrong_field
+            self.name = name
+
+    class TestSchema(Schema):
+        _id = fields.Integer(required=True)
+        name = fields.String(required=True)
+
+    @app.errorhandler(InternalServerError)
+    def payload_validation_failure(err):
+        return jsonify({"message": "Server attempted to return invalid data"}), 500
+
+    @app.route("/test")
+    @responds(schema=TestSchema, validate=True)
+    def get():
+        obj = {"wrong_field": 42, "name": "Jon Snow"}
+        data = TestDataObj(**obj)
+        return data
+
+    with app.test_client() as cl:
+        resp = cl.get("/test")
+        obj = resp.json
+        assert resp.status_code == 500
+        assert resp.json == {"message": "Server attempted to return invalid data"}
+
