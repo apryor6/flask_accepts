@@ -55,13 +55,12 @@ def accepts(
             model_name = arg
             break
     for qp in query_params:
-        if 'location' in qp:
-            continue
         if qp["type"] == bool:
             # mapping native bool is necessary so that string "false" is not truthy
             _parser.add_argument(qp["name"], type=inputs.boolean, location="values")
         else:
-            _parser.add_argument(**qp, location="values")
+            params = {**qp, "location": qp.get("location") or "values"}
+            _parser.add_argument(**params)
 
     if schema:
         schema = _get_or_create_schema(schema, many=many)
@@ -195,7 +194,7 @@ def responds(
                     errs = schema.validate(rv)
                     if errs:
                         raise InternalServerError(
-                            description='Server attempted to return invalid data'
+                            description="Server attempted to return invalid data"
                         )
                 serialized = schema.dump(rv)
             else:
