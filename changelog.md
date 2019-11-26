@@ -105,3 +105,7 @@
   0.15.2
 
 - Fix a bug where providing the location explicitly threw an exception
+  
+  0.15.3
+
+- Fix a bug where providing the location would not validate in headers
