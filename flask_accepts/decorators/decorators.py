@@ -189,14 +189,15 @@ def responds(
             if isinstance(rv, Response):
                 return rv
             if schema:
+                serialized = schema.dump(rv)
+
                 # Validate data if asked to (throws)
                 if validate:
-                    errs = schema.validate(rv)
+                    errs = schema.validate(serialized)
                     if errs:
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
                         )
-                serialized = schema.dump(rv)
             else:
                 from flask_restplus import marshal
 
