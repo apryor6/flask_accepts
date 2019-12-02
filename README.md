@@ -329,3 +329,5 @@ To install _flask_accepts_ for development, fork or clone the repository, create
 and while active install dev requirements.
 
     (venv) [user@station flask_accepts]$ pip install -r dev-requirements.txt
+
+Plesae follow contribution [guidelines](https://opensource.guide/how-to-contribute/), add comments and document your changes before providing a pull request.
