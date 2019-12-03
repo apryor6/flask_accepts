@@ -211,10 +211,14 @@ def responds(
         # Add Swagger
         if api and use_swagger and _IS_METHOD:
             if schema:
+                api_model = for_swagger(
+                    schema=schema, model_name=model_name, api=api, operation="dump"
+                )
+                if schema.many is True:
+                    api_model = [api_model]
+
                 inner = _document_like_marshal_with(
-                    for_swagger(
-                        schema=schema, model_name=model_name, api=api, operation="dump"
-                    ),
+                    api_model,
                     status_code=status_code,
                     description=description,
                 )(inner)
