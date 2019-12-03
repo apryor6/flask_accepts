@@ -107,15 +107,16 @@ def accepts(
         # Add Swagger
         if api and use_swagger and _IS_METHOD:
             if schema:
-                inner = api.doc(
-                    params={qp["name"]: qp for qp in query_params},
-                    body=for_swagger(
-                        schema=schema,
-                        model_name=model_name or get_default_model_name(schema),
-                        api=api,
-                        operation="load",
-                    ),
-                )(inner)
+                body = for_swagger(
+                    schema=schema,
+                    model_name=model_name or get_default_model_name(schema),
+                    api=api,
+                    operation="load",
+                )
+                params = {
+                    'expect': [body, _parser],
+                }
+                inner = api.doc(**params)(inner)
             elif _parser:
                 inner = api.expect(_parser)(inner)
         return inner
