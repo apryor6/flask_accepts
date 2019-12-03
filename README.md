@@ -2,6 +2,22 @@
 [![license](https://img.shields.io/github/license/apryor6/flask_accepts)](https://img.shields.io/github/license/apryor6/flask_accepts)
 [![code_style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://img.shields.io/badge/code%20style-black-000000.svg)
 
+---
+
+- [flask_accepts](#flask-accepts)
+  - [Installation](#installation)
+  - [Basic usage](#basic-usage)
+  - [Usage with "vanilla Flask"](#usage-with--vanilla-flask-)
+  * [Usage with Marshmallow schemas](#usage-with-marshmallow-schemas)
+    - [Marshmallow validators](#marshmallow-validators)
+    - [Default values](#default-values)
+  * [Automatic Swagger documentation](#automatic-swagger-documentation)
+    - [Defining the model name](#defining-the-model-name)
+    - [Error handling](#error-handling)
+    - [Specifying response codes](#specifying-response-codes)
+- [Development setup](#development-setup)
+
+---
 
 # flask_accepts
 
@@ -306,3 +322,12 @@ app = create_app()
 if __name__ == "__main__":
     app.run(debug=True)
 ```
+
+# Development setup
+
+To install _flask_accepts_ for development, fork or clone the repository, create virtual environment
+and while active install dev requirements.
+
+    (venv) [user@station flask_accepts]$ pip install -r dev-requirements.txt
+
+Plesae follow contribution [guidelines](https://opensource.guide/how-to-contribute/), add comments and document your changes before providing a pull request.
