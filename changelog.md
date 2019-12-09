@@ -109,3 +109,7 @@
   0.15.3
 
 - Fix a bug where providing the location would not validate in headers
+
+  0.15.4
+
+- Fix a bug to enable many=True in schemas
