@@ -55,12 +55,12 @@ def accepts(
             model_name = arg
             break
     for qp in query_params:
+        params = {**qp, "location": qp.get("location") or "values"}
         if qp["type"] == bool:
             # mapping native bool is necessary so that string "false" is not truthy
-            _parser.add_argument(qp["name"], type=inputs.boolean, location="values")
-        else:
-            params = {**qp, "location": qp.get("location") or "values"}
-            _parser.add_argument(**params)
+            # https://flask-restplus.readthedocs.io/en/stable/parsing.html#advanced-types-handling
+            params['type'] = inputs.boolean
+        _parser.add_argument(**params)
 
     if schema:
         schema = _get_or_create_schema(schema, many=many)
