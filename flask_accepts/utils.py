@@ -1,5 +1,5 @@
 from typing import Optional, Type, Union
-from flask_restplus import fields as fr
+from flask_restx import fields as fr
 from marshmallow import fields as ma
 from marshmallow.schema import Schema, SchemaMeta
 import uuid
@@ -43,12 +43,12 @@ def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"
 
 def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
     """
-    Convert a marshmallow schema to equivalent Flask-RESTplus model
+    Convert a marshmallow schema to equivalent Flask-restx model
 
     Args:
         schema (Marshmallow Schema): Schema defining the inputs
-        api (Namespace): Flask-RESTplus namespace (necessary for context)
-        model_name (str): Name of Flask-RESTplus model
+        api (Namespace): Flask-restx namespace (necessary for context)
+        model_name (str): Name of Flask-restx model
 
     Returns:
         api.model: An equivalent api.model

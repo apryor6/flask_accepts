@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_accepts import accepts
-from flask_restplus import Api, Namespace, Resource
+from flask_restx import Api, Namespace, Resource
 from marshmallow import Schema, fields
 
 

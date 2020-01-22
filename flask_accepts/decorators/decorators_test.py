@@ -1,5 +1,5 @@
 from flask import request
-from flask_restplus import Resource, Api
+from flask_restx import Resource, Api
 from marshmallow import Schema, fields
 
 from flask_accepts.decorators import accepts, responds

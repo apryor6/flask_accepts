@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 from marshmallow import Schema, fields as ma
 
 from flask import Flask
-from flask_restplus import Api, fields as fr, namespace
+from flask_restx import Api, fields as fr, namespace
 
 # from .utils import unpack_list, unpack_nested
 import flask_accepts.utils as utils

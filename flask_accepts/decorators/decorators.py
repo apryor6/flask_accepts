@@ -5,8 +5,8 @@ from werkzeug.exceptions import BadRequest, InternalServerError
 from marshmallow import Schema
 from marshmallow.exceptions import ValidationError
 
-from flask_restplus.model import Model
-from flask_restplus import fields, reqparse, inputs
+from flask_restx.model import Model
+from flask_restx import fields, reqparse, inputs
 from flask_accepts.utils import for_swagger, get_default_model_name
 
 
@@ -20,7 +20,7 @@ def accepts(
 ):
     """
     Wrap a Flask route with input validation using a combination of reqparse from
-    Flask-RESTplus and/or Marshmallow schemas
+    Flask-restx and/or Marshmallow schemas
 
     Args:
         *args: any number of dictionaries containing parameters to pass to
@@ -58,7 +58,7 @@ def accepts(
         params = {**qp, "location": qp.get("location") or "values"}
         if qp["type"] == bool:
             # mapping native bool is necessary so that string "false" is not truthy
-            # https://flask-restplus.readthedocs.io/en/stable/parsing.html#advanced-types-handling
+            # https://flask-restx.readthedocs.io/en/stable/parsing.html#advanced-types-handling
             params['type'] = inputs.boolean
         _parser.add_argument(**params)
 
@@ -152,7 +152,7 @@ def responds(
     """
     from functools import wraps
 
-    from flask_restplus import reqparse
+    from flask_restx import reqparse
 
     _check_deprecate_many(many)
 
@@ -200,7 +200,7 @@ def responds(
                             description="Server attempted to return invalid data"
                         )
             else:
-                from flask_restplus import marshal
+                from flask_restx import marshal
 
                 serialized = marshal(rv, model_from_parser)
 
@@ -259,7 +259,7 @@ def _get_or_create_schema(
 
 
 def _model_from_parser(model_name: str, parser: reqparse.RequestParser) -> Model:
-    from flask_restplus import fields
+    from flask_restx import fields
 
     base_type_map = {
         "integer": fields.Integer,

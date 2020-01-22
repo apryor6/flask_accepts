@@ -22,7 +22,7 @@ class WidgetSchema(Schema):
 
 
 def create_app(env=None):
-    from flask_restplus import Api, Namespace, Resource
+    from flask_restx import Api, Namespace, Resource
 
     app = Flask(__name__)
     api = Api(app)
@@ -35,7 +35,7 @@ def create_app(env=None):
 
         return request.parsed_obj
 
-    @api.route("/restplus/make_a_widget")
+    @api.route("/restx/make_a_widget")
     class WidgetResource(Resource):
         @accepts(dict(name="some_arg", type=str), schema=WidgetSchema, api=api)
         @responds(schema=WidgetSchema, api=api)

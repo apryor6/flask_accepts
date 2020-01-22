@@ -26,12 +26,12 @@ class DoodadSchema(Schema):
 
 
 def create_app(env=None):
-    from flask_restplus import Api, Namespace, Resource
+    from flask_restx import Api, Namespace, Resource
 
     app = Flask(__name__)
     api = Api(app)
 
-    @api.route("/restplus/make_a_widget")
+    @api.route("/restx/make_a_widget")
     class DoodadResource(Resource):
         @accepts(schema=DoodadSchema, api=api)
         @responds(schema=DoodadSchema, api=api)
