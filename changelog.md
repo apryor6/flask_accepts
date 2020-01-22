@@ -113,3 +113,7 @@
   0.15.4
 
 - Fix a bug to enable many=True in schemas
+
+  0.16.0
+
+- Convert from Flask-RESTplus to flask-restx
