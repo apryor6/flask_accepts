@@ -44,6 +44,8 @@ This makes it easy to create a serialization layer on your API outputs without h
 
 Simple, `pip install flask_accepts`
 
+Note, running the example code from the source directory will require Python 3.7 or greater as these leverage dataclasses.
+
 ### Basic usage
 
 Here is a basic example of an endpoint that takes a couple of URL query params and returns a new Widget. The `accepts` and `responds` decorators both take as positional arguments any number of dictionaries that will be passed to `flask_restful.reqparse.ArgumentParser` (see [here](https://flask-restx.readthedocs.io/en/stable/parsing.html)). A Marshmallow schema may be passed with the `schema` parameter. These different arguments can be mixed as you see fit.
