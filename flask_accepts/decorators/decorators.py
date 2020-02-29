@@ -199,6 +199,9 @@ def responds(
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
                         )
+
+                # Apply the flask-restx mask after validation
+                serialized = _apply_restx_mask(serialized)
             else:
                 from flask_restx import marshal
 
@@ -233,6 +236,15 @@ def responds(
         return inner
 
     return decorator
+
+
+def _apply_restx_mask(serialized):
+    from flask import current_app, request
+    from flask_restx.mask import apply as apply_mask
+
+    mask_header = current_app.config["RESTX_MASK_HEADER"]
+    mask = request.headers.get(mask_header)
+    return apply_mask(serialized, mask) if mask else serialized
 
 
 def _check_deprecate_many(many: bool = False):
