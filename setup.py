@@ -13,5 +13,6 @@ setup(
     install_requires=[
         "marshmallow>=3.0.1",
         "flask-restx==0.1.0",
+        "Werkzeug==0.16.0"
     ],
 )
