@@ -117,3 +117,7 @@
   0.16.0
 
 - Convert from Flask-RESTplus to flask-restx
+
+  0.16.2
+
+- Hande X-Fields header 
