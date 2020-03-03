@@ -59,7 +59,7 @@ def accepts(
         if qp["type"] == bool:
             # mapping native bool is necessary so that string "false" is not truthy
             # https://flask-restx.readthedocs.io/en/stable/parsing.html#advanced-types-handling
-            params['type'] = inputs.boolean
+            params["type"] = inputs.boolean
         _parser.add_argument(**params)
 
     if schema:
@@ -114,7 +114,7 @@ def accepts(
                     operation="load",
                 )
                 params = {
-                    'expect': [body, _parser],
+                    "expect": [body, _parser],
                 }
                 inner = api.doc(**params)(inner)
             elif _parser:
@@ -222,9 +222,7 @@ def responds(
                     api_model = [api_model]
 
                 inner = _document_like_marshal_with(
-                    api_model,
-                    status_code=status_code,
-                    description=description,
+                    api_model, status_code=status_code, description=description,
                 )(inner)
 
             elif _parser:
@@ -242,7 +240,7 @@ def _apply_restx_mask(serialized):
     from flask import current_app, request
     from flask_restx.mask import apply as apply_mask
 
-    mask_header = current_app.config["RESTX_MASK_HEADER"]
+    mask_header = current_app.config.get("RESTX_MASK_HEADER", "X-Fields")
     mask = request.headers.get(mask_header)
     return apply_mask(serialized, mask) if mask else serialized
 
