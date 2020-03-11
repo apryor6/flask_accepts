@@ -173,14 +173,15 @@ def _ma_field_to_fr_field(value: ma.Field) -> dict:
 
     return fr_field_parameters
 
-def is_schema(value_type):
+def is_schema(val):
     schemas = [SchemaMeta,Schema]
     try:
-        from marshmallow_sqlalchemy import ModelSchema, ModelSchemameta
-        schemas.extend([ModelSchema,ModelSchemameta])
-    except ImportError:
+        from marshmallow_sqlalchemy import ModelSchema
+        from marshmallow_sqlalchemy.schema import ModelSchemaMeta
+        schemas.extend([ModelSchema,ModelSchemaMeta])
+    except ImportError as e:
         pass
-    return any([isinstance(value_type,schema) for schema in schemas])
+    return any([isinstance(val,schema) for schema in schemas])
 
 def map_type(val, api, model_name, operation):
     value_type = type(val)
@@ -188,7 +189,7 @@ def map_type(val, api, model_name, operation):
     if value_type in type_map:
         return type_map[value_type](val, api, model_name, operation)
 
-    if is_schema(value_type):
+    if is_schema(val):
         return type_map[Schema](val, api, model_name, operation)
 
     raise TypeError('Unknown type for marshmallow model field was used.')
