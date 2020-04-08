@@ -180,7 +180,7 @@ def map_type(val, api, model_name, operation):
     if value_type in type_map:
         return type_map[value_type](val, api, model_name, operation)
 
-    if isinstance(value_type, SchemaMeta) or isinstance(value_type, Schema):
+    if issubclass(value_type, SchemaMeta) or issubclass(value_type, Schema):
         return type_map[Schema](val, api, model_name, operation)
 
     raise TypeError('Unknown type for marshmallow model field was used.')
