@@ -1,8 +1,10 @@
 from flask import request
 from flask_restx import Resource, Api
 from marshmallow import Schema, fields
+from werkzeug.datastructures import MultiDict
 
 from flask_accepts.decorators import accepts, responds
+from flask_accepts.decorators.decorators import _convert_multidict_values_to_schema
 from flask_accepts.test.fixtures import app, client  # noqa
 
 
@@ -208,6 +210,179 @@ def test_failure_when_arg_is_wrong_type(app, client):  # noqa
     with client as cl:
         resp = cl.get("/test?foo=baz")
         assert resp.status_code == 400
+
+
+def test_accepts_with_query_params_schema_single_value(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", query_params_schema=TestSchema)
+    def test():
+        assert request.parsed_query_params["foo"] == 3
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test?foo=3")
+        assert resp.status_code == 200
+
+
+def test_accepts_with_query_params_schema_list_value(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.List(fields.String(), required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", query_params_schema=TestSchema)
+    def test():
+        assert request.parsed_query_params["foo"] == ["3"]
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test?foo=3")
+        assert resp.status_code == 200
+
+
+def test_accepts_with_query_params_schema_unknown_arguments(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", query_params_schema=TestSchema)
+    def test():
+        # Extra query params should be excluded.
+        assert "bar" not in request.parsed_query_params
+        assert request.parsed_query_params["foo"] == 3
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test?foo=3&bar=4")
+        assert resp.status_code == 200
+
+
+def test_failure_when_query_params_schema_arg_is_missing(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.String(required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", query_params_schema=TestSchema)
+    def test():
+        pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 400
+
+
+def test_failure_when_query_params_schema_arg_is_wrong_type(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", query_params_schema=TestSchema)
+    def test():
+        pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.get("/test?foo=baz")
+        assert resp.status_code == 400
+
+
+def test_accepts_with_header_schema_single_value(app, client):  # noqa
+    class TestSchema(Schema):
+        Foo = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts(headers_schema=TestSchema)
+    def test():
+        assert request.parsed_headers["Foo"] == 3
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test", headers={"Foo": "3"})
+        assert resp.status_code == 200
+
+
+def test_accepts_with_header_schema_list_value(app, client):  # noqa
+    class TestSchema(Schema):
+        Foo = fields.List(fields.String(), required=True)
+
+    @app.route("/test")
+    @accepts(headers_schema=TestSchema)
+    def test():
+        assert request.parsed_headers["Foo"] == ["3"]
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test", headers={"Foo": "3"})
+        assert resp.status_code == 200
+
+
+def test_accepts_with_header_schema_unknown_arguments(app, client):  # noqa
+    class TestSchema(Schema):
+        Foo = fields.List(fields.String(), required=True)
+
+    @app.route("/test")
+    @accepts(headers_schema=TestSchema)
+    def test():
+        # Extra header values should be excluded.
+        assert "Bar" not in request.parsed_headers
+        assert request.parsed_headers["Foo"] == ["3"]
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test", headers={"Foo": "3", "Bar": "4"})
+        assert resp.status_code == 200
+
+
+def test_failure_when_header_schema_arg_is_missing(app, client):  # noqa
+    class TestSchema(Schema):
+        Foo = fields.String(required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", headers_schema=TestSchema)
+    def test():
+        pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 400
+
+
+def test_failure_when_header_schema_arg_is_wrong_type(app, client):  # noqa
+    class TestSchema(Schema):
+        Foo = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts("TestSchema", headers_schema=TestSchema)
+    def test():
+        pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.get("/test", headers={"Foo": "baz"})
+        assert resp.status_code == 400
+
+
+def test_accepts_with_postional_args_query_params_schema_and_header_schema(app, client):  # noqa
+    class QueryParamsSchema(Schema):
+        query_param = fields.List(fields.String(), required=True)
+
+    class HeadersSchema(Schema):
+        Header = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts(
+        dict(name="foo", type=int, help="An important foo"),
+        query_params_schema=QueryParamsSchema,
+        headers_schema=HeadersSchema)
+    def test():
+        assert request.parsed_args["foo"] == 3
+        assert request.parsed_query_params["query_param"] == ["baz", "qux"]
+        assert request.parsed_headers["Header"] == 3
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test?foo=3&query_param=baz&query_param=qux", headers={"Header": "3"})
+        assert resp.status_code == 200
 
 
 def test_responds(app, client):  # noqa
@@ -551,3 +726,51 @@ def test_responds_with_validate(app, client):  # noqa
         assert resp.status_code == 500
         assert resp.json == {"message": "Server attempted to return invalid data"}
 
+
+def test_multidict_single_values_interpreted_correctly(app, client):  # noqa
+    class TestSchema(Schema):
+        name = fields.String(required=True)
+
+    multidict = MultiDict([("name", "value"), ("new_value", "still_here")])
+    result = _convert_multidict_values_to_schema(multidict, TestSchema())
+
+    # `name` should be left a single value
+    assert result["name"] == "value"
+
+    # `new_value` should *not* be removed here, even though it"s not in the
+    # schema.
+    assert result["new_value"] == "still_here"
+
+    # Also makes sure that if multiple values are found in the multidict, then
+    # only the first one is returned.
+    multidict = MultiDict([
+        ("name", "value"),
+        ("name", "value2"),
+    ])
+    result = _convert_multidict_values_to_schema(multidict, TestSchema())
+    assert result["name"] == "value"
+
+
+def test_multidict_list_values_interpreted_correctly(app, client):  # noqa
+    class TestSchema(Schema):
+        name = fields.List(fields.String(), required=True)
+
+    multidict = MultiDict([
+        ("name", "value"),
+        ("new_value", "still_here")
+    ])
+    result = _convert_multidict_values_to_schema(multidict, TestSchema())
+
+    # `name` should be converted to a list.
+    assert result["name"] == ["value"]
+
+    # `new_value` should *not* be removed here, even though it"s not in the schema.
+    assert result["new_value"] == "still_here"
+
+    # Also makes sure handling a list with >1 values also works.
+    multidict = MultiDict([
+        ("name", "value"),
+        ("name", "value2"),
+    ])
+    result = _convert_multidict_values_to_schema(multidict, TestSchema())
+    assert result["name"] == ["value", "value2"]
