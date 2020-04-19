@@ -61,7 +61,7 @@ def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
     if isinstance(schema, SchemaMeta):
         schema = schema()
     fields = {
-        k: map_type(v, api, model_name, operation)
+        v.data_key or k: map_type(v, api, model_name, operation)
         for k, v in (vars(schema).get("fields").items())
         if type(v) in type_map and _check_load_dump_only(v, operation)
     }
