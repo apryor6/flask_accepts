@@ -1,5 +1,5 @@
 from typing import Optional, Type, Union
-from flask_restx import fields as fr
+from flask_restx import fields as fr, inputs
 from marshmallow import fields as ma
 from marshmallow.schema import Schema, SchemaMeta
 import uuid
@@ -184,3 +184,42 @@ def map_type(val, api, model_name, operation):
         return type_map[Schema](val, api, model_name, operation)
 
     raise TypeError('Unknown type for marshmallow model field was used.')
+
+
+type_map_ma_to_reqparse = {
+    ma.Bool: inputs.boolean,
+    ma.Boolean: inputs.boolean,
+    ma.Int: int,
+    ma.Integer: int,
+    ma.Float: float
+}
+
+
+def ma_field_to_reqparse_argument(value: ma.Field) -> dict:
+    """Maps a marshmallow field to a dictionary that can be used to initialize a
+    request parser argument.
+    """
+    reqparse_argument_parameters = {}
+
+    if is_list_field(value):
+        value_type = type(value.inner)
+        reqparse_argument_parameters["action"] = "append"
+    else:
+        value_type = type(value)
+        reqparse_argument_parameters["action"] = "store"
+
+    reqparse_argument_parameters["type"] = type_map_ma_to_reqparse.get(value_type, str)
+
+    if hasattr(value, "required"):
+        reqparse_argument_parameters["required"] = value.required
+
+    if hasattr(value, "metadata") and "description" in value.metadata:
+        reqparse_argument_parameters["help"] = value.metadata["description"]
+
+    return reqparse_argument_parameters
+
+
+def is_list_field(field):
+    """Returns `True` if the given field is a list type."""
+    # Need to handle both flask_restx and marshmallow fields.
+    return isinstance(field, ma.List) or isinstance(field, fr.List)

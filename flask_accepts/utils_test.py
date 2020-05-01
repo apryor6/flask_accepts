@@ -257,7 +257,7 @@ def test_make_type_mapper_works_with_required():
     api = Api(app)
 
     mapper = make_type_mapper(fr.Raw)
-    result = mapper(ma.Raw(required=True), api=api, model_name='test_model_name', operation='load')
+    result = mapper(ma.Raw(required=True), api=api, model_name="test_model_name", operation="load")
     assert result.required
 
 
@@ -268,7 +268,7 @@ def test_make_type_mapper_produces_nonrequired_param_by_default():
     api = Api(app)
 
     mapper = make_type_mapper(fr.Raw)
-    result = mapper(ma.Raw(), api=api, model_name='test_model_name', operation='load')
+    result = mapper(ma.Raw(), api=api, model_name="test_model_name", operation="load")
     assert not result.required
 
 
@@ -341,7 +341,7 @@ def test_map_type_calls_type_map_dict_function_for_known_type_with_correct_param
         type(expected_ma_field): float_type_mapper
     }
 
-    type_map_patch = patch.object(utils, 'type_map', new=type_map_mock)
+    type_map_patch = patch.object(utils, "type_map", new=type_map_mock)
 
     with type_map_patch:
         utils.map_type(expected_ma_field, expected_namespace, expected_model_name, expected_operation)
@@ -361,7 +361,7 @@ def test_map_type_calls_type_map_dict_function_for_schema_instance():
     type_map_mock = dict(utils.type_map)
     type_map_mock[Schema] = schema_type_mapper_mock
 
-    type_map_patch = patch.object(utils, 'type_map', new=type_map_mock)
+    type_map_patch = patch.object(utils, "type_map", new=type_map_mock)
 
     with type_map_patch:
         utils.map_type(expected_ma_field, expected_namespace, expected_model_name, expected_operation)
@@ -384,7 +384,7 @@ def test_map_type_calls_type_map_dict_function_for_schema_class():
     type_map_mock = dict(utils.type_map)
     type_map_mock[Schema] = schema_type_mapper_mock
 
-    type_map_patch = patch.object(utils, 'type_map', new=type_map_mock)
+    type_map_patch = patch.object(utils, "type_map", new=type_map_mock)
 
     with type_map_patch:
         utils.map_type(expected_ma_field, expected_namespace, expected_model_name, expected_operation)
@@ -405,4 +405,33 @@ def test_map_type_raises_error_for_unknown_type():
 
 
 def _get_type_mapper_default_params():
-    return 'test-model', 'test-operation', namespace.Namespace('test-ns')
+    return "test-model", "test-operation", namespace.Namespace("test-ns")
+
+
+def test_ma_field_to_reqparse_argument_single_values():
+    # Test a simple integer.
+    result = utils.ma_field_to_reqparse_argument(ma.Integer(required=True))
+    assert result["type"] is int
+    assert result["required"] is True
+    assert result["action"] == "store"
+    assert "help" not in result
+
+    # Test that complex fields default to string.
+    result = utils.ma_field_to_reqparse_argument(ma.Email(required=True, description="A description"))
+    assert result["type"] is str
+    assert result["required"] is True
+    assert result["action"] == "store"
+    assert result["help"] == "A description"
+
+def test_ma_field_to_reqparse_argument_list_values():
+    result = utils.ma_field_to_reqparse_argument(ma.List(ma.Integer()))
+    assert result["type"] is int
+    assert result["required"] is False
+    assert result["action"] == "append"
+    assert "help" not in result
+
+    result = utils.ma_field_to_reqparse_argument(ma.List(ma.String(), description="A description"))
+    assert result["type"] is str
+    assert result["required"] is False
+    assert result["action"] == "append"
+    assert result["help"] == "A description"
