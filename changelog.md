@@ -121,3 +121,7 @@
   0.16.2
 
 - Hande X-Fields header 
+
+  0.17.0
+
+- Enable passing of Schema to query params and headers
