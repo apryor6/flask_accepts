@@ -125,3 +125,7 @@
   0.17.0
 
 - Enable passing of Schema to query params and headers
+  
+  0.17.1
+
+- Add support for envelope parameter
