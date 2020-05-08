@@ -586,6 +586,27 @@ def test_responds_respects_status_code(app, client):  # noqa
         assert resp.status_code == 999
 
 
+def test_responds_respects_envelope(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api, envelope='test-data')
+        def get(self):
+            from flask import make_response, Response
+
+            obj = {"_id": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 200
+        assert resp.json == {'test-data': {'_id': 42, 'name': 'Jon Snow'}}
+
 def test_accepts_with_nested_schema(app, client):  # noqa
     class TestSchema(Schema):
         _id = fields.Integer()
