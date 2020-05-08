@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Type, Union
 from flask import jsonify
 from werkzeug.wrappers import Response
@@ -198,6 +199,7 @@ def responds(
     schema=None,
     many: bool = False,
     api=None,
+    envelope=None,
     status_code: int = 200,
     validate: bool = False,
     description: str = None,
@@ -239,8 +241,10 @@ def responds(
     for qp in query_params:
         _parser.add_argument(**qp, location="values")
 
+    ordered = None
     if schema:
         schema = _get_or_create_schema(schema, many=many)
+        ordered = schema.ordered
 
     model_name = model_name or get_default_model_name(schema)
     model_from_parser = _model_from_parser(model_name=model_name, parser=_parser)
@@ -274,6 +278,9 @@ def responds(
                 from flask_restx import marshal
 
                 serialized = marshal(rv, model_from_parser)
+
+            if envelope:
+                serialized = OrderedDict([(envelope, serialized)]) if ordered else {envelope: serialized}
 
             if not _is_method(func):
                 # Regular route, need to manually create Response
