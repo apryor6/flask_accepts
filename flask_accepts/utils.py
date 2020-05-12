@@ -114,6 +114,7 @@ type_map = {
     ma.Integer: fr.Integer,
     ma.Length: fr.Float,
     ma.Mapping: fr.Raw,
+    ma.Method: fr.Raw,
     ma.NaiveDateTime: fr.DateTime,
     ma.Number: fr.Float,
     ma.Pluck: fr.Raw,
