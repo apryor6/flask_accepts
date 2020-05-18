@@ -404,6 +404,18 @@ def test_map_type_raises_error_for_unknown_type():
         utils.map_type(unknown_ma_field, expected_namespace, expected_model_name, expected_operation)
 
 
+def test_map_type_dump_ma_method_returns_fr_raw():
+    class TestSchema(Schema):
+        method_field = ma.Method()
+
+    TestApi = Api()
+
+    expected_method_field_mapping = fr.Raw
+    map_result = utils.map_type(TestSchema, TestApi, 'TestSchema','dump')
+
+    assert isinstance(map_result['method_field'], expected_method_field_mapping)
+
+
 def _get_type_mapper_default_params():
     return "test-model", "test-operation", namespace.Namespace("test-ns")
 
