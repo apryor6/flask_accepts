@@ -21,6 +21,7 @@ def accepts(
     many: bool = False,
     api=None,
     use_swagger: bool = True,
+    partial: bool = False
 ):
     """
     Wrap a Flask route with input validation using a combination of reqparse from
@@ -44,6 +45,7 @@ def accepts(
             return a list of the corresponding schema objects when set to True. This
             flag corresopnds only to the request body schema, and not the
             `query_params_schema` or `headers_schema` arguments.
+        partial (bool): The partial argument for marshmallow schema loading.
 
     Returns:
         The wrapped route
@@ -114,7 +116,7 @@ def accepts(
             # Handle Marshmallow schema for request body
             if schema:
                 try:
-                    obj = schema.load(request.get_json())
+                    obj = schema.load(request.get_json(), partial=partial)
                     request.parsed_obj = obj
                 except ValidationError as ex:
                     schema_error = ex.messages
