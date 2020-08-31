@@ -795,23 +795,3 @@ def test_multidict_list_values_interpreted_correctly(app, client):  # noqa
     ])
     result = _convert_multidict_values_to_schema(multidict, TestSchema())
     assert result["name"] == ["value", "value2"]
-
-
-def test_partial_param_for_schema_loading(app, client):  # noqa
-    class TestSchema(Schema):
-        foo = fields.Str(required=True)
-        bar = fields.Str(required=True)
-
-    api = Api(app)
-
-    @api.route("/test")
-    class TestResource(Resource):
-        @accepts(schema=TestSchema(), api=api, partial=True)
-        def post(self):
-            return "success"
-
-    with client as cl:
-        resp = cl.post("/test", json={"foo": 'foo', "bar": "bar"})
-        assert resp.status_code == 200
-        resp = cl.post("/test", json={"foo": 'foo'})
-        assert resp.status_code == 200
