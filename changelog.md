@@ -129,3 +129,7 @@
   0.17.1
 
 - Add support for envelope parameter
+
+  0.17.4
+
+- Removed partial argument of accepts() because it breaks the passed in schema instance
