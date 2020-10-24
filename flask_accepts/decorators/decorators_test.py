@@ -385,6 +385,30 @@ def test_accepts_with_postional_args_query_params_schema_and_header_schema(app, 
         assert resp.status_code == 200
 
 
+def test_failure_when_both_schema_and_header_schema_args_invalid(app, client):  # noqa
+    import json
+
+    class Schema_(Schema):
+        payload = fields.List(fields.String(), required=True)
+
+    class HeadersSchema(Schema):
+        Header = fields.Integer(required=True)
+
+    @app.route("/test")
+    @accepts(
+        dict(name="foo", type=int, help="An important foo"),
+        schema=Schema_,
+        headers_schema=HeadersSchema)
+    def test():
+        pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.get("/test", headers={"Header": "2"}, 
+        content_type="application/json", 
+        data=json.dumps({"payload":1}))
+        assert resp.status_code == 400
+
+
 def test_responds(app, client):  # noqa
     class TestSchema(Schema):
         _id = fields.Integer()
