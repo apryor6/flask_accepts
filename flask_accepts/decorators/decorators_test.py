@@ -115,7 +115,7 @@ def test_validation_errors_added_to_request_with_Resource_and_schema(
             json={"_id": "this is not an integer and will error", "name": "test name"},
         )
         assert resp.status_code == 400
-        assert "Not a valid integer." in resp.json["schema_errors"]["_id"]
+        assert "Not a valid integer." in resp.json["errors"]["schema_errors"]["_id"]
 
 
 def test_validation_errors_from_all_added_to_request_with_Resource_and_schema(
