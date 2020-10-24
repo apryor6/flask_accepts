@@ -125,7 +125,8 @@ def accepts(
                     if hasattr(error, "data"):
                         error.data["errors"].update({"schema_errors": schema_error})
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {}
+                        error.data["errors"] = {"schema_errors": schema_error}
 
             # Handle Marshmallow schema for query params
             if query_params_schema:
@@ -145,7 +146,8 @@ def accepts(
                     if hasattr(error, "data"):
                         error.data["errors"].update({"schema_errors": schema_error})
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {}
+                        error.data["errors"] = {"schema_errors": schema_error}
 
             # Handle Marshmallow schema for headers
             if headers_schema:
@@ -165,7 +167,8 @@ def accepts(
                     if hasattr(error, "data"):
                         error.data["errors"].update({"schema_errors": schema_error})
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {}
+                        error.data["errors"] = {"schema_errors": schema_error}
 
             # If any parsing produced an error, combine them and re-raise
             if error:
