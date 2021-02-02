@@ -303,7 +303,7 @@ def responds(
             elif _parser:
                 api.add_model(model_name, model_from_parser)
                 inner = _document_like_marshal_with(
-                    model_from_parser, status_code=status_code
+                    model_from_parser, status_code=status_code, description=description
                 )(inner)
 
         return inner
