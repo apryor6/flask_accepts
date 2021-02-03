@@ -396,8 +396,7 @@ def test_accept_schema_instance_respects_many(app, client):  # noqa
     class TestResource(Resource):
         @accepts(schema=TestSchema(many=True), api=api)
         def post(self):
-            obj = [{"_id": 42, "name": "Jon Snow"}]
-            return obj
+            return request.parsed_obj
 
     with client as cl:
         resp = cl.post("/test", data='[{"_id": 42, "name": "Jon Snow"}]', content_type='application/json')
@@ -854,11 +853,11 @@ def test_schema_generates_correct_swagger(app, client):  # noqa
         @accepts(model_name="MyRequest", schema=TestSchema(many=False), api=api)
         @responds(model_name="MyResponse", schema=TestSchema(many=False), api=api, description="My description")
         def post(self):
-            obj = [{"_id": 42, "name": "Jon Snow"}]
+            obj = {"_id": 42, "name": "Jon Snow"}
             return obj
 
     with client as cl:
-        cl.post(route, data='[{"_id": 42, "name": "Jon Snow"}]', content_type='application/json')
+        cl.post(route, data='{"_id": 42, "name": "Jon Snow"}', content_type='application/json')
         route_docs = api.__schema__["paths"][route]["post"]
         responses_docs = route_docs['responses']['200']
 
