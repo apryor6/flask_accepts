@@ -385,6 +385,25 @@ def test_accepts_with_postional_args_query_params_schema_and_header_schema(app, 
         assert resp.status_code == 200
 
 
+def test_accept_schema_instance_respects_many(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(schema=TestSchema(many=True), api=api)
+        def post(self):
+            return request.parsed_obj
+
+    with client as cl:
+        resp = cl.post("/test", data='[{"_id": 42, "name": "Jon Snow"}]', content_type='application/json')
+        obj = resp.json
+        assert obj == [{"_id": 42, "name": "Jon Snow"}]
+
+
 def test_responds(app, client):  # noqa
     class TestSchema(Schema):
         _id = fields.Integer()
@@ -795,3 +814,76 @@ def test_multidict_list_values_interpreted_correctly(app, client):  # noqa
     ])
     result = _convert_multidict_values_to_schema(multidict, TestSchema())
     assert result["name"] == ["value", "value2"]
+
+
+def test_no_schema_generates_correct_swagger(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+    route = "/test"
+
+    @api.route(route)
+    class TestResource(Resource):
+        @responds(api=api, status_code=201, description="My description")
+        def post(self):
+            obj = [{"_id": 42, "name": "Jon Snow"}]
+            return obj
+
+    with client as cl:
+        cl.post(route, data='[{"_id": 42, "name": "Jon Snow"}]', content_type='application/json')
+        route_docs = api.__schema__["paths"][route]["post"]
+
+        responses_docs = route_docs['responses']['201']
+
+        assert responses_docs['description'] == "My description"
+
+
+def test_schema_generates_correct_swagger(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+    route = "/test"
+
+    @api.route(route)
+    class TestResource(Resource):
+        @accepts(model_name="MyRequest", schema=TestSchema(many=False), api=api)
+        @responds(model_name="MyResponse", schema=TestSchema(many=False), api=api, description="My description")
+        def post(self):
+            obj = {"_id": 42, "name": "Jon Snow"}
+            return obj
+
+    with client as cl:
+        cl.post(route, data='{"_id": 42, "name": "Jon Snow"}', content_type='application/json')
+        route_docs = api.__schema__["paths"][route]["post"]
+        responses_docs = route_docs['responses']['200']
+
+        assert responses_docs['description'] == "My description"
+        assert responses_docs['schema'] == {'$ref': '#/definitions/MyResponse'}
+        assert route_docs['parameters'][0]['schema'] == {'$ref': '#/definitions/MyRequest'}
+
+
+def test_schema_generates_correct_swagger_for_many(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+    route = "/test"
+
+    @api.route(route)
+    class TestResource(Resource):
+        @accepts(schema=TestSchema(many=True), api=api)
+        @responds(schema=TestSchema(many=True), api=api, description="My description")
+        def post(self):
+            obj = [{"_id": 42, "name": "Jon Snow"}]
+            return obj
+
+    with client as cl:
+        resp = cl.post(route, data='[{"_id": 42, "name": "Jon Snow"}]', content_type='application/json')
+        route_docs = api.__schema__["paths"][route]["post"]
+        assert route_docs['responses']['200']['schema'] == {"type": "array", "items": {"$ref": "#/definitions/Test"}}
+        assert route_docs['parameters'][0]['schema'] == {"type": "array", "items": {"$ref": "#/definitions/Test"}}
