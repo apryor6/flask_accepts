@@ -367,7 +367,14 @@ def _model_from_parser(model_name: str, parser: reqparse.RequestParser) -> Model
 
 
 def merge(first: dict, second: dict) -> dict:
-    return {**first, **second}
+    for key, value in first.items():
+        if isinstance(value, dict):
+            node = second.setdefault(key, {})
+            merge(value, node)
+        else:
+            second[key] = value
+
+    return second
 
 
 def _document_like_marshal_with(

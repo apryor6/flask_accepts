@@ -887,3 +887,26 @@ def test_schema_generates_correct_swagger_for_many(app, client):  # noqa
         route_docs = api.__schema__["paths"][route]["post"]
         assert route_docs['responses']['200']['schema'] == {"type": "array", "items": {"$ref": "#/definitions/Test"}}
         assert route_docs['parameters'][0]['schema'] == {"type": "array", "items": {"$ref": "#/definitions/Test"}}
+
+
+def test_swagger_respects_existing_response_docs(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+    route = "/test"
+
+    @api.route(route)
+    class TestResource(Resource):
+        @responds(schema=TestSchema(many=True), api=api, description="My description")
+        @api.doc(responses={401: "Not Authorized", 404: "Not Found"})
+        def get(self):
+            return [{"_id": 42, "name": "Jon Snow"}]
+
+    with client as cl:
+        cl.get(route)
+        route_docs = api.__schema__["paths"][route]["get"]
+        assert route_docs["responses"]["200"]["description"] == "My description"
+        assert route_docs["responses"]["401"]["description"] == "Not Authorized"
+        assert route_docs["responses"]["404"]["description"] == "Not Found"
