@@ -207,6 +207,7 @@ def responds(
     validate: bool = False,
     description: str = None,
     use_swagger: bool = True,
+    skip_none: bool = False,
 ):
     """
     Serialize the output of a function using the Marshmallow schema to dump the results.
@@ -284,6 +285,21 @@ def responds(
 
             if envelope:
                 serialized = OrderedDict([(envelope, serialized)]) if ordered else {envelope: serialized}
+
+            if skip_none:
+                def remove_none(obj):
+                    if isinstance(obj, list):
+                        return [remove_none(entry) for entry in obj if entry is not None]
+                    if isinstance(obj, dict):
+                        result = {}
+                        for key, value in obj.items():
+                            value = remove_none(value)
+                            if key is not None and value is not None:
+                                result[key] = value
+                        return result
+                    return obj
+
+                serialized = remove_none(serialized)
 
             if not _is_method(func):
                 # Regular route, need to manually create Response

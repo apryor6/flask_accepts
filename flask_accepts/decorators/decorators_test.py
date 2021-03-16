@@ -626,6 +626,49 @@ def test_responds_respects_envelope(app, client):  # noqa
         assert resp.status_code == 200
         assert resp.json == {'test-data': {'_id': 42, 'name': 'Jon Snow'}}
 
+
+def test_responds_skips_none_false(app, client):
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api)
+        def get(self):
+            return {"_id": 42, "name": None}
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 200
+        assert resp.json == {'_id': 42, 'name': None}
+
+
+def test_responds_with_nested_skips_none_true(app, client):
+    class NestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    class TestSchema(Schema):
+        name = fields.String()
+        child = fields.Nested(NestSchema)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @responds(schema=TestSchema, api=api, skip_none=True, many=True)
+        def get(self):
+            return [{"name": None, "child": {"_id": 42, "name": None}}]
+
+    with client as cl:
+        resp = cl.get("/test")
+        assert resp.status_code == 200
+        assert resp.json == [{"child": {'_id': 42}}]
+
+
 def test_accepts_with_nested_schema(app, client):  # noqa
     class TestSchema(Schema):
         _id = fields.Integer()
