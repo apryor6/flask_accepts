@@ -160,7 +160,7 @@ def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None)
 def _ma_field_to_fr_field(value: ma.Field) -> dict:
     fr_field_parameters = {}
 
-    if hasattr(value, "default"):
+    if hasattr(value, "default") and type(value.default) != ma.utils._Missing:
         fr_field_parameters["example"] = value.default
 
     if hasattr(value, "required"):
