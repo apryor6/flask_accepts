@@ -17,6 +17,14 @@ def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
         return unpack_nested_self(val, api, model_name, operation)
 
     model_name = get_default_model_name(val.nested)
+    
+    if val.many:
+        return fr.List(
+            fr.Nested(
+                map_type(val.nested, api, model_name, operation), **_ma_field_to_fr_field(val)
+        )
+    )
+
     return fr.Nested(
         map_type(val.nested, api, model_name, operation), **_ma_field_to_fr_field(val)
     )
