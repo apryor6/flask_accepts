@@ -5,14 +5,14 @@ Flask==1.0.2
 flask-marshmallow==0.10.1
 flask-restx==0.1.1
 itsdangerous==1.1.0
-Jinja2==2.10.3
+Jinja2==2.11.3
 jsonschema==3.2.0
 MarkupSafe==1.1.1
 marshmallow==3.2.2
 more-itertools==8.0.0
 packaging==19.2
 pluggy==0.13.1
-py==1.8.0
+py==1.10.0
 pyparsing==2.4.5
 pyrsistent==0.15.6
 pytest==5.3.1

@@ -114,7 +114,7 @@ def accepts(
             # Handle Marshmallow schema for request body
             if schema:
                 try:
-                    obj = schema.load(request.get_json())
+                    obj = schema.load(request.get_json(force=True))
                     request.parsed_obj = obj
                 except ValidationError as ex:
                     schema_error = ex.messages
@@ -185,6 +185,9 @@ def accepts(
                     api=api,
                     operation="load",
                 )
+                if schema.many is True:
+                    body = [body]
+
                 params = {
                     "expect": [body, _parser],
                 }
@@ -207,6 +210,7 @@ def responds(
     validate: bool = False,
     description: str = None,
     use_swagger: bool = True,
+    skip_none: bool = False,
 ):
     """
     Serialize the output of a function using the Marshmallow schema to dump the results.
@@ -285,6 +289,21 @@ def responds(
             if envelope:
                 serialized = OrderedDict([(envelope, serialized)]) if ordered else {envelope: serialized}
 
+            if skip_none:
+                def remove_none(obj):
+                    if isinstance(obj, list):
+                        return [remove_none(entry) for entry in obj if entry is not None]
+                    if isinstance(obj, dict):
+                        result = {}
+                        for key, value in obj.items():
+                            value = remove_none(value)
+                            if key is not None and value is not None:
+                                result[key] = value
+                        return result
+                    return obj
+
+                serialized = remove_none(serialized)
+
             if not _is_method(func):
                 # Regular route, need to manually create Response
                 return jsonify(serialized), status_code
@@ -306,7 +325,7 @@ def responds(
             elif _parser:
                 api.add_model(model_name, model_from_parser)
                 inner = _document_like_marshal_with(
-                    model_from_parser, status_code=status_code
+                    model_from_parser, status_code=status_code, description=description
                 )(inner)
 
         return inner
@@ -367,7 +386,14 @@ def _model_from_parser(model_name: str, parser: reqparse.RequestParser) -> Model
 
 
 def merge(first: dict, second: dict) -> dict:
-    return {**first, **second}
+    for key, value in first.items():
+        if isinstance(value, dict):
+            node = second.setdefault(key, {})
+            merge(value, node)
+        else:
+            second[key] = value
+
+    return second
 
 
 def _document_like_marshal_with(
