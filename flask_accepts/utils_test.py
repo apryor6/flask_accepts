@@ -47,6 +47,24 @@ def test_unpack_nested():
     assert result
 
 
+def test_unpack_nested_many():
+    app = Flask(__name__)
+    api = Api(app)
+
+    class NestedSchema(Schema):
+        my_string = ma.String()
+
+    class IntegerSchema(Schema):
+        my_int = ma.Integer()
+        children = ma.Nested(NestedSchema, many=True)
+
+    schema = IntegerSchema()
+
+    result = utils.unpack_nested(schema.fields.get("children"), api=api)
+
+    assert type(result) == fr.List
+
+
 def test_unpack_nested_self():
     app = Flask(__name__)
     api = Api(app)

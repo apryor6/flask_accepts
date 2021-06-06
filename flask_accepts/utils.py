@@ -17,6 +17,14 @@ def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
         return unpack_nested_self(val, api, model_name, operation)
 
     model_name = get_default_model_name(val.nested)
+    
+    if val.many:
+        return fr.List(
+            fr.Nested(
+                map_type(val.nested, api, model_name, operation), **_ma_field_to_fr_field(val)
+        )
+    )
+
     return fr.Nested(
         map_type(val.nested, api, model_name, operation), **_ma_field_to_fr_field(val)
     )
@@ -160,7 +168,7 @@ def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None)
 def _ma_field_to_fr_field(value: ma.Field) -> dict:
     fr_field_parameters = {}
 
-    if hasattr(value, "default"):
+    if hasattr(value, "default") and type(value.default) != ma.utils._Missing:
         fr_field_parameters["example"] = value.default
 
     if hasattr(value, "required"):
