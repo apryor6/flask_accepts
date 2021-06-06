@@ -6,7 +6,7 @@ setup(
     name="flask_accepts",
     author='Alan "AJ" Pryor, Jr.',
     author_email="apryor6@gmail.com",
-    version="0.18.1",
+    version="0.18.2",
     description="Easy, opinionated Flask input/output handling with Flask-restx and Marshmallow",
     ext_modules=[],
     packages=find_packages(),
