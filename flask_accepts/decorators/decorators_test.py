@@ -259,6 +259,22 @@ def test_accepts_with_query_params_schema_unknown_arguments(app, client):  # noq
         assert resp.status_code == 200
 
 
+def test_accepts_with_query_params_schema_data_key(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=False, data_key="fooExternal")
+
+    @app.route("/test")
+    @accepts("TestSchema", query_params_schema=TestSchema)
+    def test():
+        assert request.parsed_args["fooExternal"] == 3
+        assert request.parsed_query_params["foo"] == 3
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test?fooExternal=3")
+        assert resp.status_code == 200
+
+
 def test_failure_when_query_params_schema_arg_is_missing(app, client):  # noqa
     class TestSchema(Schema):
         foo = fields.String(required=True)
@@ -331,6 +347,22 @@ def test_accepts_with_header_schema_unknown_arguments(app, client):  # noqa
 
     with client as cl:
         resp = cl.get("/test", headers={"Foo": "3", "Bar": "4"})
+        assert resp.status_code == 200
+
+
+def test_accepts_with_header_schema_data_key(app, client):  # noqa
+    class TestSchema(Schema):
+        Foo = fields.Integer(required=False, data_key="Foo-External")
+
+    @app.route("/test")
+    @accepts("TestSchema", headers_schema=TestSchema)
+    def test():
+        assert request.parsed_headers["Foo"] == 3
+        assert request.parsed_args["Foo-External"] == 3
+        return "success"
+
+    with client as cl:
+        resp = cl.get("/test", headers={"Foo-External": "3"})
         assert resp.status_code == 200
 
 
