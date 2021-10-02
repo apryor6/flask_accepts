@@ -36,8 +36,9 @@ def accepts(
         schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse JSON
             data from the request body and store in request.parsed_obj. Defaults to None.
         query_params_schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse
-            data from the request query params and store in request.parsed_query_params. These values will
-            also be added to the `request.args` dict. Defaults to None.
+            data from the request query params as well as form data and store them in
+            request.parsed_query_params. These values will also be added to the `request.args` dict.
+            Defaults to None.
         headers_schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse
             data from the request header and store in request.parsed_headers. Defaults to None.
         many (bool, optional): The Marshmallow schema `many` parameter, which will
