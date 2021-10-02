@@ -259,6 +259,24 @@ def test_accepts_with_query_params_schema_unknown_arguments(app, client):  # noq
         assert resp.status_code == 200
 
 
+def test_accepts_with_query_params_schema_form_data(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", query_params_schema=TestSchema, api=api)
+        def post(self):
+            assert request.parsed_query_params["foo"] == 3
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test", data={"foo": 3})
+        assert resp.status_code == 200
+
+
 def test_failure_when_query_params_schema_arg_is_missing(app, client):  # noqa
     class TestSchema(Schema):
         foo = fields.String(required=True)

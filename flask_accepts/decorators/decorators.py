@@ -127,10 +127,10 @@ def accepts(
                     else:
                         error.data = {"schema_errors": schema_error}
 
-            # Handle Marshmallow schema for query params
+            # Handle Marshmallow schema for query params and form data
             if query_params_schema:
                 request_args = _convert_multidict_values_to_schema(
-                    request.args,
+                    request.values,
                     query_params_schema)
 
                 try:
