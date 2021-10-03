@@ -394,26 +394,151 @@ def test_failure_when_header_schema_arg_is_wrong_type(app, client):  # noqa
         assert resp.status_code == 400
 
 
-def test_accepts_with_postional_args_query_params_schema_and_header_schema(app, client):  # noqa
+def test_accepts_with_form_schema_single_value(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", form_schema=TestSchema, api=api)
+        def post(self):
+            assert request.parsed_form["foo"] == 3
+            assert request.parsed_args["foo"] == 3
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test", data={"foo": 3})
+        assert resp.status_code == 200
+
+
+def test_accepts_with_form_schema_list_value(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.List(fields.String(), required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", form_schema=TestSchema, api=api)
+        def post(self):
+            assert request.parsed_form["foo"] == ["3"]
+            assert request.parsed_args["foo"] == ["3"]
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test", data={"foo": 3})
+        assert resp.status_code == 200
+
+
+def test_accepts_with_form_schema_unknown_arguments(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", form_schema=TestSchema, api=api)
+        def post(self):
+            # Extra query params should be excluded.
+            assert "bar" not in request.parsed_form
+            assert request.parsed_form["foo"] == 3
+            assert "bar" not in request.parsed_args
+            assert request.parsed_args["foo"] == 3
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test", data={"foo": 3, "bar": 4})
+        assert resp.status_code == 200
+
+
+def test_accepts_with_form_schema_data_key(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=False, data_key="fooExternal")
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", form_schema=TestSchema, api=api)
+        def post(self):
+            assert request.parsed_args["fooExternal"] == 3
+            assert request.parsed_form["foo"] == 3
+            return "success"
+
+    with client as cl:
+        resp = cl.post("/test", data={"fooExternal": 3})
+        assert resp.status_code == 200
+
+
+def test_failure_when_form_schema_arg_is_missing(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.String(required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", form_schema=TestSchema, api=api)
+        def post(self):
+                pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.post("/test")
+        assert resp.status_code == 400
+
+
+def test_failure_when_form_schema_arg_is_wrong_type(app, client):  # noqa
+    class TestSchema(Schema):
+        foo = fields.Integer(required=True)
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts("TestSchema", form_schema=TestSchema, api=api)
+        def post(self):
+            pass  # pragma: no cover
+
+    with client as cl:
+        resp = cl.post("/test", data={"foo": "baz"})
+        assert resp.status_code == 400
+
+
+def test_accepts_with_postional_args_query_params_schema_and_header_schema_and_form_schema(app, client):  # noqa
     class QueryParamsSchema(Schema):
         query_param = fields.List(fields.String(), required=True)
 
     class HeadersSchema(Schema):
         Header = fields.Integer(required=True)
+    
+    class FormSchema(Schema):
+        form = fields.String(required=True)
 
-    @app.route("/test")
-    @accepts(
-        dict(name="foo", type=int, help="An important foo"),
-        query_params_schema=QueryParamsSchema,
-        headers_schema=HeadersSchema)
-    def test():
-        assert request.parsed_args["foo"] == 3
-        assert request.parsed_query_params["query_param"] == ["baz", "qux"]
-        assert request.parsed_headers["Header"] == 3
-        return "success"
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(
+            dict(name="foo", type=int, help="An important foo"),
+            query_params_schema=QueryParamsSchema,
+            headers_schema=HeadersSchema,
+            form_schema=FormSchema,
+            api=api)
+        def post(self):
+            assert request.parsed_args["foo"] == 3
+            assert request.parsed_query_params["query_param"] == ["baz", "qux"]
+            assert request.parsed_headers["Header"] == 3
+            assert request.parsed_form["form"] == "value"
+            return "success"
 
     with client as cl:
-        resp = cl.get("/test?foo=3&query_param=baz&query_param=qux", headers={"Header": "3"})
+        resp = cl.post(
+            "/test?foo=3&query_param=baz&query_param=qux",
+            headers={"Header": "3"},
+            data={"form": "value"})
         assert resp.status_code == 200
 
 
