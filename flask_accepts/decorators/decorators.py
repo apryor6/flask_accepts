@@ -83,7 +83,7 @@ def accepts(
 
         for name, field in query_params_schema.fields.items():
             params = {**ma_field_to_reqparse_argument(field), "location": "values"}
-            _parser.add_argument(name, **params)
+            _parser.add_argument(field.data_key or name, **params)
 
     # Handles headers schema.
     if headers_schema:
@@ -91,7 +91,7 @@ def accepts(
 
         for name, field in headers_schema.fields.items():
             params = {**ma_field_to_reqparse_argument(field), "location": "headers"}
-            _parser.add_argument(name, **params)
+            _parser.add_argument(field.data_key or name, **params)
 
     def decorator(func):
         from functools import wraps
@@ -436,7 +436,10 @@ def _convert_multidict_values_to_schema(multidict, schema):
     """
     result = {}
 
-    fields = dict(schema.fields.items())
+    fields = {
+        field.data_key or name: field
+        for name, field in schema.fields.items()
+    }
     for key, value in multidict.items():
         # If the key isn't defined in the schema, then insert it into the
         # result set as is and let marshmallow validation raise an error.
