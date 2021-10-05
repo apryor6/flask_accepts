@@ -18,6 +18,7 @@ def accepts(
     schema: Union[Schema, Type[Schema], None] = None,
     query_params_schema: Union[Schema, Type[Schema], None] = None,
     headers_schema: Union[Schema, Type[Schema], None] = None,
+    form_schema: Union[Schema, Type[Schema], None] = None,
     many: bool = False,
     api=None,
     use_swagger: bool = True,
@@ -40,6 +41,9 @@ def accepts(
             also be added to the `request.args` dict. Defaults to None.
         headers_schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse
             data from the request header and store in request.parsed_headers. Defaults to None.
+        form_schema (Marshmallow.Schema, optional): A Marshmallow Schema that will be used to parse
+            form data in the request body and store it in `request.parsed_form`. These values will
+            also be added to the `request.parsed_args` dict. Defaults to None.
         many (bool, optional): The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True. This
             flag corresopnds only to the request body schema, and not the
@@ -91,6 +95,14 @@ def accepts(
 
         for name, field in headers_schema.fields.items():
             params = {**ma_field_to_reqparse_argument(field), "location": "headers"}
+            _parser.add_argument(field.data_key or name, **params)
+
+    # Handles form schema.
+    if form_schema:
+        form_schema = _get_or_create_schema(form_schema, unknown=EXCLUDE)
+
+        for name, field in form_schema.fields.items():
+            params = {**ma_field_to_reqparse_argument(field), "location": "form"}
             _parser.add_argument(field.data_key or name, **params)
 
     def decorator(func):
@@ -161,6 +173,26 @@ def accepts(
                 if schema_error:
                     error = error or BadRequest(
                         f"Error parsing headers: {schema_error}"
+                    )
+                    if hasattr(error, "data"):
+                        error.data["errors"].update({"schema_errors": schema_error})
+                    else:
+                        error.data = {"schema_errors": schema_error}
+
+            # Handle Marshmallow schema for form data
+            if form_schema:
+                request_form = _convert_multidict_values_to_schema(
+                    request.form,
+                    form_schema)
+
+                try:
+                    obj = form_schema.load(request_form)
+                    request.parsed_form = obj
+                except ValidationError as ex:
+                    schema_error = ex.messages
+                if schema_error:
+                    error = error or BadRequest(
+                        f"Error parsing form data: {schema_error}"
                     )
                     if hasattr(error, "data"):
                         error.data["errors"].update({"schema_errors": schema_error})
