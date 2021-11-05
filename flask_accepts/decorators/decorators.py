@@ -307,7 +307,13 @@ def responds(
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
                         )
-
+               
+                if "status" in serialized:
+                    if type(serialized['status']) == int:
+                        status_code = serialized['status']
+                    else:
+                        raise TypeError(description="Bad Http Status code")
+                       
                 # Apply the flask-restx mask after validation
                 serialized = _apply_restx_mask(serialized)
             else:
