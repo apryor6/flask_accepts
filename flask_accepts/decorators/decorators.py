@@ -308,7 +308,7 @@ def responds(
                             description="Server attempted to return invalid data"
                         )
                
-                if "status_code" in serialized:
+                if "status" in serialized:
                     if type(serialized['status_code']) == int:
                         status_code = serialized['status_code']
                     else:
