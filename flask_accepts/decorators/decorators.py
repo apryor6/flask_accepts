@@ -309,8 +309,8 @@ def responds(
                         )
                
                 if "status" in serialized:
-                    if type(serialized['status_code']) == int:
-                        status_code = serialized['status_code']
+                    if type(serialized['status']) == int:
+                        status_code = serialized['status']
                     else:
                         raise TypeError(description="Bad Http Status code")
                        
