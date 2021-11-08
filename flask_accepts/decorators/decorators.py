@@ -347,8 +347,8 @@ def responds(
 
             if not _is_method(func):
                 # Regular route, need to manually create Response
-                return jsonify(serialized), status_code
-            return serialized, status_code
+                return jsonify(serialized), parameter_status_code
+            return serialized, parameter_status_code
 
         # Add Swagger
         if api and use_swagger and _IS_METHOD:
