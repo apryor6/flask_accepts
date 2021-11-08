@@ -293,7 +293,13 @@ def responds(
         @wraps(func)
         def inner(*args, **kwargs):
             rv = func(*args, **kwargs)
-
+            parameter_status_code = status_code
+            
+            if "status" in rv:
+                 if type(rv['status']) == int:
+                     parameter_status_code = rv['status']
+                 else:
+                     raise TypeError(description="Bad Http Status code")
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
