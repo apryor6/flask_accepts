@@ -300,7 +300,7 @@ def responds(
                        if type(rv['status']) == int:
                            parameter_status_code = rv['status']
                        else:
-                           raise TypeError(description="Bad Http Status code")
+                           parameter_status_code = 200
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
