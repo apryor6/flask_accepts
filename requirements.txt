@@ -1,2 +1,2 @@
 Flask==1.0.2
-flask-restx==0.1.0
+flask-restx==0.5.1

@@ -3,7 +3,7 @@ attrs==19.3.0
 Click==7.0
 Flask==1.0.2
 flask-marshmallow==0.10.1
-flask-restx==0.1.1
+flask-restx==0.5.1
 itsdangerous==1.1.0
 Jinja2==2.11.3
 jsonschema==3.2.0
