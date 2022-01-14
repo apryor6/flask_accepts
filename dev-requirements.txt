@@ -8,7 +8,7 @@ itsdangerous==1.1.0
 Jinja2==2.11.3
 jsonschema==3.2.0
 MarkupSafe==1.1.1
-marshmallow==3.2.2
+marshmallow==3.14.1
 more-itertools==8.0.0
 packaging==19.2
 pluggy==0.13.1
