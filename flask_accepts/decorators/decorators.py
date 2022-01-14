@@ -126,7 +126,7 @@ def accepts(
             # Handle Marshmallow schema for request body
             if schema:
                 try:
-                    obj = schema.load(request.get_json(force=True))
+                    obj = schema.load(request.get_json(force=True) or {})
                     request.parsed_obj = obj
                 except ValidationError as ex:
                     schema_error = ex.messages
@@ -135,7 +135,7 @@ def accepts(
                         f"Error parsing request body: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["schema_errors"].update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 
@@ -155,7 +155,7 @@ def accepts(
                         f"Error parsing query params: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["schema_errors"].update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 
@@ -175,7 +175,7 @@ def accepts(
                         f"Error parsing headers: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["schema_errors"].update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 
