@@ -199,9 +199,9 @@ def test__ma_field_to_fr_field_converts_required_param_if_present():
 def test__ma_field_to_fr_field_converts_missing_param_to_default_if_present():
     @dataclass
     class FakeFieldWithMissing(ma.Field):
-        missing: bool
+        load_default: bool
 
-    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldWithMissing(missing=True))
+    fr_field_dict = utils._ma_field_to_fr_field(FakeFieldWithMissing(load_default=True))
     assert fr_field_dict["default"] is True
 
     @dataclass
@@ -242,12 +242,12 @@ def test__ma_field_to_fr_field_converts_metadata_param_to_description_if_present
 def test__ma_field_to_fr_field_converts_default_to_example_if_present():
     @dataclass
     class FakeFieldWithDefault(ma.Field):
-        default: str
+        dump_default: str
 
     expected_example_value = "test"
 
     fr_field_dict = utils._ma_field_to_fr_field(
-        FakeFieldWithDefault(default=expected_example_value)
+        FakeFieldWithDefault(dump_default=expected_example_value)
     )
     assert fr_field_dict["example"] == expected_example_value
 

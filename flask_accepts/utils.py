@@ -1,8 +1,18 @@
 from typing import Optional, Type, Union
+
 from flask_restx import fields as fr, inputs
 from marshmallow import fields as ma
+from marshmallow import __version_info__ as marshmallow_version
 from marshmallow.schema import Schema, SchemaMeta
 import uuid
+
+
+if marshmallow_version >= (3, 13, 0):
+    _ma_key_for_fr_example_key = "dump_default"
+    _ma_key_for_fr_default_key = "load_default"
+else:
+    _ma_key_for_fr_example_key = "default"
+    _ma_key_for_fr_default_key = "missing"
 
 
 def unpack_list(val, api, model_name: str = None, operation: str = "dump"):
@@ -168,8 +178,9 @@ def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None)
 def _ma_field_to_fr_field(value: ma.Field) -> dict:
     fr_field_parameters = {}
 
-    if hasattr(value, "default") and type(value.default) != ma.utils._Missing:
-        fr_field_parameters["example"] = value.default
+    if hasattr(value, _ma_key_for_fr_example_key) \
+            and type(getattr(value, _ma_key_for_fr_example_key)) != ma.utils._Missing:
+        fr_field_parameters["example"] = getattr(value, _ma_key_for_fr_example_key)
 
     if hasattr(value, "required"):
         fr_field_parameters["required"] = value.required
@@ -177,8 +188,9 @@ def _ma_field_to_fr_field(value: ma.Field) -> dict:
     if hasattr(value, "metadata") and "description" in value.metadata:
         fr_field_parameters["description"] = value.metadata["description"]
 
-    if hasattr(value, "missing") and type(value.missing) != ma.utils._Missing:
-        fr_field_parameters["default"] = value.missing
+    if hasattr(value, _ma_key_for_fr_default_key) \
+            and type(getattr(value, _ma_key_for_fr_default_key)) != ma.utils._Missing:
+        fr_field_parameters["default"] = getattr(value, _ma_key_for_fr_default_key)
 
     return fr_field_parameters
 
