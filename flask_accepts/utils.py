@@ -7,10 +7,9 @@ from marshmallow.schema import Schema, SchemaMeta
 import uuid
 
 
-if marshmallow_version >= (3, 13, 0):
-    _ma_key_for_fr_example_key = "dump_default"
-    _ma_key_for_fr_default_key = "load_default"
-else:
+_ma_key_for_fr_example_key = "dump_default"
+_ma_key_for_fr_default_key = "load_default"
+if marshmallow_version < (3, 13, 0):
     _ma_key_for_fr_example_key = "default"
     _ma_key_for_fr_default_key = "missing"
 
@@ -27,7 +26,7 @@ def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
         return unpack_nested_self(val, api, model_name, operation)
 
     model_name = get_default_model_name(val.nested)
-    
+
     if val.many:
         return fr.List(
             fr.Nested(
