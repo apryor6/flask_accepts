@@ -11,8 +11,8 @@ setup(
     ext_modules=[],
     packages=find_packages(),
     install_requires=[
-        "marshmallow>=3.0.1",
+        "marshmallow>=3.17.0",
         "flask-restx>=0.5.1",
-        "Werkzeug==2.2.2"
+        "werkzeug<2.1"
     ],
 )
