@@ -115,7 +115,7 @@ def test_validation_errors_added_to_request_with_Resource_and_schema(
             json={"_id": "this is not an integer and will error", "name": "test name"},
         )
         assert resp.status_code == 400
-        assert "Not a valid integer." in resp.json["schema_errors"]["_id"]
+        assert "Not a valid integer." in resp.json["errors"]["_id"]
 
 
 def test_validation_errors_from_all_added_to_request_with_Resource_and_schema(
@@ -146,7 +146,7 @@ def test_validation_errors_from_all_added_to_request_with_Resource_and_schema(
         )
 
         assert resp.status_code == 400
-        assert "Not a valid integer." in resp.json["errors"]["schema_errors"]["_id"]
+        assert "Not a valid integer." in resp.json["errors"]["_id"]
 
 
 def test_dict_arguments_are_correctly_added(app, client):  # noqa
@@ -404,7 +404,6 @@ def test_accepts_with_form_schema_single_value(app, client):  # noqa
     class TestResource(Resource):
         @accepts("TestSchema", form_schema=TestSchema, api=api)
         def post(self):
-            assert request.parsed_form["foo"] == 3
             assert request.parsed_args["foo"] == 3
             return "success"
 
@@ -513,7 +512,7 @@ def test_accepts_with_postional_args_query_params_schema_and_header_schema_and_f
 
     class HeadersSchema(Schema):
         Header = fields.Integer(required=True)
-    
+
     class FormSchema(Schema):
         form = fields.String(required=True)
 
