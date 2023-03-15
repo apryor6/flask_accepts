@@ -135,12 +135,13 @@ def accepts(
                         f"Error parsing request body: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].setdefault('schema_errors', {}).update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 
             # Handle Marshmallow schema for query params
             if query_params_schema:
+                schema_error = None
                 request_args = _convert_multidict_values_to_schema(
                     request.args,
                     query_params_schema)
@@ -155,12 +156,13 @@ def accepts(
                         f"Error parsing query params: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].setdefault('schema_errors', {}).update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 
             # Handle Marshmallow schema for headers
             if headers_schema:
+                schema_error = None
                 request_headers = _convert_multidict_values_to_schema(
                     request.headers,
                     headers_schema)
@@ -175,12 +177,13 @@ def accepts(
                         f"Error parsing headers: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].setdefault('schema_errors', {}).update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 
             # Handle Marshmallow schema for form data
             if form_schema:
+                schema_error = None
                 request_form = _convert_multidict_values_to_schema(
                     request.form,
                     form_schema)
@@ -195,7 +198,7 @@ def accepts(
                         f"Error parsing form data: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].setdefault('schema_errors', {}).update(schema_error)
                     else:
                         error.data = {"schema_errors": schema_error}
 

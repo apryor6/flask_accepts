@@ -1,3 +1,4 @@
+from pytest import mark
 from flask import request
 from flask_restx import Resource, Api
 from marshmallow import Schema, fields
@@ -301,6 +302,39 @@ def test_failure_when_query_params_schema_arg_is_wrong_type(app, client):  # noq
     with client as cl:
         resp = cl.get("/test?foo=baz")
         assert resp.status_code == 400
+
+
+@mark.parametrize('url,data,expected_code,expected_body', [
+    ('/test?foo=12', '{"bar": "yo"}', 200, {'success': True}),
+    ('/test', '{"bar": "yo"}', 200, {'success': True}),
+    ('/test', '{"bar": 1}', 400, {'schema_errors': {'bar': ['Not a valid string.']}}),
+    ('/test?foo=yeah', '{"bar": 1}', 400, {'errors': {'foo': "invalid literal for int() with base 10: 'yeah'",
+                                                      'schema_errors': {'bar': ['Not a valid string.'],
+                                                                        'foo': ['Not a valid integer.']}},
+                                           'message': 'Input payload validation failed'}),
+])
+def test_failure_when_both_query_param_and_request_schema_are_provided(
+    url, data, expected_code, expected_body, app, client,
+):  # noqa
+    api = Api(app)
+
+    class TestSchema(Schema):
+        bar = fields.String(required=True)
+
+    class TestQuerySchema(Schema):
+        foo = fields.Integer(required=False, missing=None, default=None)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(schema=TestSchema, query_params_schema=TestQuerySchema, api=api)
+        def post(self):
+            return {'success': True}
+
+    with client as cl:
+        #
+        resp = cl.post(url, data=data, content_type='application/json')
+        assert resp.status_code == expected_code
+        assert resp.json == expected_body
 
 
 def test_accepts_with_header_schema_single_value(app, client):  # noqa
