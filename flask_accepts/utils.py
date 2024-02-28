@@ -168,7 +168,7 @@ def get_default_model_name(schema: Optional[Union[Schema, Type[Schema]]] = None)
 def _ma_field_to_fr_field(value: ma.Field) -> dict:
     fr_field_parameters = {}
 
-    if hasattr(value, "default") and type(value.default) != ma.utils._Missing:
+    if hasattr(value, "dump_default") and type(value.dump_default) != ma.utils._Missing:
         fr_field_parameters["example"] = value.default
 
     if hasattr(value, "required"):
@@ -177,8 +177,8 @@ def _ma_field_to_fr_field(value: ma.Field) -> dict:
     if hasattr(value, "metadata") and "description" in value.metadata:
         fr_field_parameters["description"] = value.metadata["description"]
 
-    if hasattr(value, "missing") and type(value.missing) != ma.utils._Missing:
-        fr_field_parameters["default"] = value.missing
+    if hasattr(value, "load_default") and type(value.load_default) != ma.utils._Missing:
+        fr_field_parameters["default"] = value.load_default
 
     return fr_field_parameters
 
