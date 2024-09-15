@@ -297,6 +297,11 @@ def responds(
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
+
+            # allow overriding the stsus code passed to Flask
+            if isinstance(rv, tuple):
+                rv, status_code = rv
+
             if schema:
                 serialized = schema.dump(rv)
 
