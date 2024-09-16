@@ -231,7 +231,7 @@ def accepts(
 def responds(
     *args,
     model_name: str = None,
-    schema=None,
+    schema: Union[Schema, Type[Schema]] = None,
     alt_schemas: Dict[int, Union[Schema, Type[Schema]]] = None,
     many: bool = False,
     api=None,
@@ -292,29 +292,30 @@ def responds(
         # Check if we are decorating a class method
         _IS_METHOD = _is_method(func)
 
-        resp_schema = schema
         @wraps(func)
         def inner(*args, **kwargs):
-            global resp_schema
+            nonlocal  schema
+            nonlocal status_code
+
             rv = func(*args, **kwargs)
 
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
 
-            # allow overriding the stsus code passed to Flask
+            # allow overriding the status code passed to Flask
             if isinstance(rv, tuple):
                 rv, status_code = rv
                 if alt_schemas and status_code in alt_schemas:
                     # override the response schema
-                    resp_schema = alt_schemas[status_code]
+                    schema = alt_schemas[status_code]
 
-            if resp_schema:
-                serialized = resp_schema.dump(rv)
+            if schema:
+                serialized = schema.dump(rv)
 
                 # Validate data if asked to (throws)
                 if validate:
-                    errs = resp_schema.validate(serialized)
+                    errs = schema.validate(serialized)
                     if errs:
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
@@ -350,13 +351,14 @@ def responds(
                 return jsonify(serialized), status_code
             return serialized, status_code
 
+        nonlocal schema
         # Add Swagger
         if api and use_swagger and _IS_METHOD:
-            if resp_schema:
+            if schema:
                 api_model = for_swagger(
-                    schema=resp_schema, model_name=model_name, api=api, operation="dump"
+                    schema=schema, model_name=model_name, api=api, operation="dump"
                 )
-                if resp_schema.many is True:
+                if schema.many is True:
                     api_model = [api_model]
 
                 inner = _document_like_marshal_with(
