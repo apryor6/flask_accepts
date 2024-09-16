@@ -5,7 +5,7 @@ from werkzeug.datastructures import MultiDict
 
 from flask_accepts.decorators import accepts, responds
 from flask_accepts.decorators.decorators import _convert_multidict_values_to_schema
-from flask_accepts.test.fixtures import app, client  # noqa
+from flask_accepts.tests.fixtures import app, client  # noqa
 
 
 def test_arguments_are_added_to_request(app, client):  # noqa
@@ -53,11 +53,11 @@ def test_arguments_are_added_to_request_with_Resource_and_schema(app, client):  
         def post(self):
             assert request.parsed_obj
             assert request.parsed_obj["_id"] == 42
-            assert request.parsed_obj["name"] == "test name"
+            assert request.parsed_obj["name"] == "tests name"
             return "success"
 
     with client as cl:
-        resp = cl.post("/test?foo=3", json={"_id": 42, "name": "test name"})
+        resp = cl.post("/test?foo=3", json={"_id": 42, "name": "tests name"})
         assert resp.status_code == 200
 
 
@@ -81,11 +81,11 @@ def test_arguments_are_added_to_request_with_Resource_and_schema_instance(
         def post(self):
             assert request.parsed_obj
             assert request.parsed_obj["_id"] == 42
-            assert request.parsed_obj["name"] == "test name"
+            assert request.parsed_obj["name"] == "tests name"
             return "success"
 
     with client as cl:
-        resp = cl.post("/test?foo=3", json={"_id": 42, "name": "test name"})
+        resp = cl.post("/test?foo=3", json={"_id": 42, "name": "tests name"})
         assert resp.status_code == 200
 
 
@@ -112,7 +112,7 @@ def test_validation_errors_added_to_request_with_Resource_and_schema(
     with client as cl:
         resp = cl.post(
             "/test?foo=3",
-            json={"_id": "this is not an integer and will error", "name": "test name"},
+            json={"_id": "this is not an integer and will error", "name": "tests name"},
         )
         assert resp.status_code == 400
         assert "Not a valid integer." in resp.json["errors"]["_id"]
@@ -142,7 +142,7 @@ def test_validation_errors_from_all_added_to_request_with_Resource_and_schema(
     with client as cl:
         resp = cl.post(
             "/test?foo=not_int",
-            json={"_id": "this is not an integer and will error", "name": "test name"},
+            json={"_id": "this is not an integer and will error", "name": "tests name"},
         )
 
         assert resp.status_code == 400
@@ -770,7 +770,7 @@ def test_responds_respects_envelope(app, client):  # noqa
 
     @api.route("/test")
     class TestResource(Resource):
-        @responds(schema=TestSchema, api=api, envelope='test-data')
+        @responds(schema=TestSchema, api=api, envelope='tests-data')
         def get(self):
             from flask import make_response, Response
 
@@ -780,7 +780,7 @@ def test_responds_respects_envelope(app, client):  # noqa
     with client as cl:
         resp = cl.get("/test")
         assert resp.status_code == 200
-        assert resp.json == {'test-data': {'_id': 42, 'name': 'Jon Snow'}}
+        assert resp.json == {'tests-data': {'_id': 42, 'name': 'Jon Snow'}}
 
 
 def test_responds_skips_none_false(app, client):
@@ -846,14 +846,14 @@ def test_accepts_with_nested_schema(app, client):  # noqa
         )
         def post(self):
             assert request.parsed_obj
-            assert request.parsed_obj["child"] == {"_id": 42, "name": "test name"}
-            assert request.parsed_obj["name"] == "test host"
+            assert request.parsed_obj["child"] == {"_id": 42, "name": "tests name"}
+            assert request.parsed_obj["name"] == "tests host"
             return "success"
 
     with client as cl:
         resp = cl.post(
             "/test?foo=3",
-            json={"name": "test host", "child": {"_id": 42, "name": "test name"}},
+            json={"name": "tests host", "child": {"_id": 42, "name": "tests name"}},
         )
         assert resp.status_code == 200
 
@@ -885,23 +885,23 @@ def test_accepts_with_twice_nested_schema(app, client):  # noqa
             assert request.parsed_obj
             assert request.parsed_obj["child"]["child"] == {
                 "_id": 42,
-                "name": "test name",
+                "name": "tests name",
             }
             assert request.parsed_obj["child"] == {
-                "name": "test host",
-                "child": {"_id": 42, "name": "test name"},
+                "name": "tests host",
+                "child": {"_id": 42, "name": "tests name"},
             }
-            assert request.parsed_obj["name"] == "test host host"
+            assert request.parsed_obj["name"] == "tests host host"
             return "success"
 
     with client as cl:
         resp = cl.post(
             "/test?foo=3",
             json={
-                "name": "test host host",
+                "name": "tests host host",
                 "child": {
-                    "name": "test host",
-                    "child": {"_id": 42, "name": "test name"},
+                    "name": "tests host",
+                    "child": {"_id": 42, "name": "tests name"},
                 },
             },
         )

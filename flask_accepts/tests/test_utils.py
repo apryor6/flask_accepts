@@ -8,7 +8,7 @@ from marshmallow.schema import SchemaMeta
 from flask import Flask
 from flask_restx import Api, fields as fr, namespace
 
-# from .utils import unpack_list, unpack_nested
+# from flask_accepts.utils import unpack_list, unpack_nested
 import flask_accepts.utils as utils
 
 
@@ -96,7 +96,7 @@ def test_unpack_nested_self_many():
 
 
 def test_get_default_model_name():
-    from .utils import get_default_model_name
+    from flask_accepts.utils import get_default_model_name
 
     class TestSchema(Schema):
         pass
@@ -108,7 +108,7 @@ def test_get_default_model_name():
 
 
 def test_get_default_model_name_works_with_multiple_schema_in_name():
-    from .utils import get_default_model_name
+    from flask_accepts.utils import get_default_model_name
 
     class TestSchemaSchema(Schema):
         pass
@@ -120,7 +120,7 @@ def test_get_default_model_name_works_with_multiple_schema_in_name():
 
 
 def test_get_default_model_name_that_does_not_end_in_schema():
-    from .utils import get_default_model_name
+    from flask_accepts.utils import get_default_model_name
 
     class SomeOtherName(Schema):
         pass
@@ -132,7 +132,7 @@ def test_get_default_model_name_that_does_not_end_in_schema():
 
 
 def test_get_default_model_name_default_names():
-    from .utils import get_default_model_name, num_default_models
+    from flask_accepts.utils import get_default_model_name, num_default_models
 
     for model_num in range(5):
         result = get_default_model_name()
