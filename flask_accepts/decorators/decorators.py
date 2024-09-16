@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Type, Union
+from typing import Type, Union, Dict
 from flask import jsonify
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -232,6 +232,7 @@ def responds(
     *args,
     model_name: str = None,
     schema=None,
+    alt_schemas: Dict[int, Union[Schema, Type[Schema]]] = None,
     many: bool = False,
     api=None,
     envelope=None,
@@ -250,6 +251,7 @@ def responds(
     Args:
         schema (bool, optional): Marshmallow schema with which to serialize the output
             of the wrapped function.
+        alt_schemas (dict, optional): Dict of alternate schemas to use based on the status_code
         many (bool, optional): (DEPRECATED) The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True.
 
@@ -290,8 +292,10 @@ def responds(
         # Check if we are decorating a class method
         _IS_METHOD = _is_method(func)
 
+        resp_schema = schema
         @wraps(func)
         def inner(*args, **kwargs):
+            global resp_schema
             rv = func(*args, **kwargs)
 
             # If a Flask response has been made already, it is passed through unchanged
@@ -301,13 +305,16 @@ def responds(
             # allow overriding the stsus code passed to Flask
             if isinstance(rv, tuple):
                 rv, status_code = rv
+                if alt_schemas and status_code in alt_schemas:
+                    # override the response schema
+                    resp_schema = alt_schemas[status_code]
 
-            if schema:
-                serialized = schema.dump(rv)
+            if resp_schema:
+                serialized = resp_schema.dump(rv)
 
                 # Validate data if asked to (throws)
                 if validate:
-                    errs = schema.validate(serialized)
+                    errs = resp_schema.validate(serialized)
                     if errs:
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
@@ -345,11 +352,11 @@ def responds(
 
         # Add Swagger
         if api and use_swagger and _IS_METHOD:
-            if schema:
+            if resp_schema:
                 api_model = for_swagger(
-                    schema=schema, model_name=model_name, api=api, operation="dump"
+                    schema=resp_schema, model_name=model_name, api=api, operation="dump"
                 )
-                if schema.many is True:
+                if resp_schema.many is True:
                     api_model = [api_model]
 
                 inner = _document_like_marshal_with(
