@@ -11,8 +11,8 @@ class Widget:
 
 
 class WidgetSchema(Schema):
-    foo = fields.String(default="test value")
-    baz = fields.Integer(default=422)
+    foo = fields.String(dump_default="test value")
+    baz = fields.Integer(dump_default=422)
 
     @post_load
     def make(self, data, **kwargs):

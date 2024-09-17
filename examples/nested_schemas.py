@@ -10,17 +10,17 @@ api = Api(app)
 
 
 class CogSchema(Schema):
-    cog_foo = fields.String(default="cog")
-    cog_baz = fields.Integer(default=999)
+    cog_foo = fields.String(dump_default="cog")
+    cog_baz = fields.Integer(dump_default=999)
 
 
 class WidgetSchema(Schema):
-    foo = fields.String(default="test string")
-    baz = fields.Integer(default=42)
-    flag = fields.Bool(default=False)
-    date = fields.Date(default="01-01-1900")
-    dec = fields.Decimal(default=42.42)
-    dct = fields.Dict(default={"key": "value"})
+    foo = fields.String(dump_default="test string")
+    baz = fields.Integer(dump_default=42)
+    flag = fields.Bool(dump_default=False)
+    date = fields.Date(dump_default="01-01-1900")
+    dec = fields.Decimal(dump_default=42.42)
+    dct = fields.Dict(dump_default={"key": "value"})
 
     cog = fields.Nested(CogSchema)
 

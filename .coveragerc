@@ -1,0 +1,4 @@
+[report]
+exclude_lines =
+    # pragma: no cover
+    if marshmallow_version < \(3, 13, 0\):

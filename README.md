@@ -1,16 +1,18 @@
-[![codecov](https://codecov.io/gh/apryor6/flask_accepts/branch/master/graph/badge.svg)](https://codecov.io/gh/apryor6/flask_accepts)
+from lib2to3.btm_utils import tokens[![codecov](https://codecov.io/gh/apryor6/flask_accepts/branch/master/graph/badge.svg)](https://codecov.io/gh/apryor6/flask_accepts)
 [![license](https://img.shields.io/github/license/apryor6/flask_accepts)](https://img.shields.io/github/license/apryor6/flask_accepts)
 [![code_style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 ---
 
-- [flask_accepts](#flask-accepts)
+- [flask_accepts](#flask_accepts)
   - [Installation](#installation)
   - [Basic usage](#basic-usage)
-  - [Usage with "vanilla Flask"](#usage-with--vanilla-flask-)
+  - [Usage with "vanilla Flask"](#usage-with-vanilla-flask)
   * [Usage with Marshmallow schemas](#usage-with-marshmallow-schemas)
     - [Marshmallow validators](#marshmallow-validators)
     - [Default values](#default-values)
+  * [ Returning Different Response Schemas](#returning-different-response-schemas)
+    - [Pass-through of arbitrary status codes](#pass-through-of-arbitrary-status-codes) 
   * [Automatic Swagger documentation](#automatic-swagger-documentation)
     - [Defining the model name](#defining-the-model-name)
     - [Error handling](#error-handling)
@@ -186,6 +188,71 @@ You can provide any of the built-in validators to Marshmallow schemas. See [here
 #### Default values
 
 Default values provided to Marshmallow schemas will be internally mapped and displayed in the Swagger documentation. See [this example](https://github.com/apryor6/flask_accepts/blob/master/examples/default_values.py) for a usage of `flask_accepts` with nested Marshmallow schemas and default values that will display correctly in Swagger.
+
+## Returning Different Response Schemas
+
+In real world scenarios things dont always go to plan and you may need to return an error code with your response data 
+or a different schema entirely (eg Internal Serrver Errors)
+
+the `responds` decorator accepts a dictionary of response codes and their associated schema.
+when returning response data simply provied the status code as you would for a standard Flask response.
+The response will then be loaded into the correct schema.
+
+**Example:**
+```python
+
+class LoginSchema(Schema):
+    username = fields.String()
+    password = fields.String()
+
+class TokenSchema(Schema):
+    access_token = fields.String()
+    id_token = fields.String()
+    refresh_token = fields.String()
+
+class ErrorSchema(Schema):
+    error_code = fields.Integer()
+    errors = fields.List()
+     
+@api.route("/restx/update_user")
+class LoginResource(Resource):
+    alt_schemas = {401: ErrorSchema}
+    @accepts(schema=LoginSchema, api=api)
+    @responds(schema=TokenSchema, alt_schemas=alt_schemas, api=api)
+    def post(self):
+        payload = request.parsed_obj
+        username = payload.username
+        password = payload.password
+
+        tokens = self.attempt_login(username, password)
+        if tokens is None:
+            return {"error_code": 8001, "errors": ["invalid username or password"]}, 401
+        
+        return tokens
+```
+
+### Pass-through of arbitrary status codes
+You can also provide a status code that does not have an associated schema
+Also works if there are no alternate schemas set.
+
+The response data will be loaded into the default schema and the provided status code passed through.
+An example of this usage might be returning a 422 for bad/invalid data.  
+```python
+
+class ResponseSchema(Schema):
+    response = fields.String()
+    errors = fields.List()
+
+@api.route("/restx/update_user")
+class UserResource(Resource):
+    @responds(schema=ResponseSchema, api=api)
+    def post(self):
+        # check data
+        if not data_valid:
+            return {"response": None, "errors": ["invalid user id"]}, 422
+
+        return {"response": "user updated", "errors": []}
+```
 
 ## Automatic Swagger documentation
 

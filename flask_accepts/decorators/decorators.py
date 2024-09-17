@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Type, Union
+from typing import Type, Union, Dict
 from flask import jsonify
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -126,7 +126,7 @@ def accepts(
             # Handle Marshmallow schema for request body
             if schema:
                 try:
-                    obj = schema.load(request.get_json(force=True))
+                    obj = schema.load(request.get_json(force=True) or {})
                     request.parsed_obj = obj
                 except ValidationError as ex:
                     schema_error = ex.messages
@@ -135,9 +135,9 @@ def accepts(
                         f"Error parsing request body: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].update(schema_error)
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {"errors": schema_error}
 
             # Handle Marshmallow schema for query params
             if query_params_schema:
@@ -155,9 +155,9 @@ def accepts(
                         f"Error parsing query params: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].update(schema_error)
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {"errors": schema_error}
 
             # Handle Marshmallow schema for headers
             if headers_schema:
@@ -175,9 +175,9 @@ def accepts(
                         f"Error parsing headers: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].update(schema_error)
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {"errors": schema_error}
 
             # Handle Marshmallow schema for form data
             if form_schema:
@@ -195,9 +195,9 @@ def accepts(
                         f"Error parsing form data: {schema_error}"
                     )
                     if hasattr(error, "data"):
-                        error.data["errors"].update({"schema_errors": schema_error})
+                        error.data["errors"].update(schema_error)
                     else:
-                        error.data = {"schema_errors": schema_error}
+                        error.data = {"errors": schema_error}
 
             # If any parsing produced an error, combine them and re-raise
             if error:
@@ -231,7 +231,8 @@ def accepts(
 def responds(
     *args,
     model_name: str = None,
-    schema=None,
+    schema: Union[Schema, Type[Schema]] = None,
+    alt_schemas: Dict[int, Union[Schema, Type[Schema]]] = None,
     many: bool = False,
     api=None,
     envelope=None,
@@ -250,6 +251,7 @@ def responds(
     Args:
         schema (bool, optional): Marshmallow schema with which to serialize the output
             of the wrapped function.
+        alt_schemas (dict, optional): Dict of alternate schemas to use based on the status_code
         many (bool, optional): (DEPRECATED) The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True.
 
@@ -292,17 +294,29 @@ def responds(
 
         @wraps(func)
         def inner(*args, **kwargs):
+            nonlocal  schema
+            nonlocal status_code
+
             rv = func(*args, **kwargs)
 
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
-            if schema:
-                serialized = schema.dump(rv)
+
+            resp_schema = schema
+            # allow overriding the status code passed to Flask
+            if isinstance(rv, tuple):
+                rv, status_code = rv
+                if alt_schemas and status_code in alt_schemas:
+                    # override the default response schema
+                    resp_schema = _get_or_create_schema(alt_schemas[status_code])
+
+            if resp_schema:
+                serialized = resp_schema.dump(rv)
 
                 # Validate data if asked to (throws)
                 if validate:
-                    errs = schema.validate(serialized)
+                    errs = resp_schema.validate(serialized)
                     if errs:
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
@@ -338,6 +352,7 @@ def responds(
                 return jsonify(serialized), status_code
             return serialized, status_code
 
+        nonlocal schema
         # Add Swagger
         if api and use_swagger and _IS_METHOD:
             if schema:
