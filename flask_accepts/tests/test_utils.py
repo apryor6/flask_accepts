@@ -8,7 +8,6 @@ from marshmallow.schema import SchemaMeta
 from flask import Flask
 from flask_restx import Api, fields as fr, namespace
 
-# from flask_accepts.utils import unpack_list, unpack_nested
 import flask_accepts.utils as utils
 
 
@@ -96,46 +95,40 @@ def test_unpack_nested_self_many():
 
 
 def test_get_default_model_name():
-    from flask_accepts.utils import get_default_model_name
-
     class TestSchema(Schema):
         pass
 
-    result = get_default_model_name(TestSchema)
+    result = utils.get_default_model_name(TestSchema)
 
     expected = "Test"
     assert result == expected
 
 
 def test_get_default_model_name_works_with_multiple_schema_in_name():
-    from flask_accepts.utils import get_default_model_name
-
     class TestSchemaSchema(Schema):
         pass
 
-    result = get_default_model_name(TestSchemaSchema)
+    result = utils.get_default_model_name(TestSchemaSchema)
 
     expected = "TestSchema"
     assert result == expected
 
 
 def test_get_default_model_name_that_does_not_end_in_schema():
-    from flask_accepts.utils import get_default_model_name
-
     class SomeOtherName(Schema):
         pass
 
-    result = get_default_model_name(SomeOtherName)
+    result = utils.get_default_model_name(SomeOtherName)
 
     expected = "SomeOtherName"
     assert result == expected
 
 
 def test_get_default_model_name_default_names():
-    from flask_accepts.utils import get_default_model_name, num_default_models
+    from flask_accepts.utils import num_default_models
 
     for model_num in range(5):
-        result = get_default_model_name()
+        result = utils.get_default_model_name()
         expected = f"DefaultResponseModel_{model_num + num_default_models}"
         assert result == expected
 
@@ -269,82 +262,70 @@ def test__ma_field_to_fr_field_returns_empty_dict_for_no_params_present_in_ma_fi
 
 
 def test_make_type_mapper_works_with_required():
-    from flask_accepts.utils import make_type_mapper
-
     app = Flask(__name__)
     api = Api(app)
 
-    mapper = make_type_mapper(fr.Raw)
+    mapper = utils.make_type_mapper(fr.Raw)
     result = mapper(ma.Raw(required=True), api=api, model_name="test_model_name", operation="load")
     assert result.required
 
 
 def test_make_type_mapper_produces_nonrequired_param_by_default():
-    from flask_accepts.utils import make_type_mapper
-
     app = Flask(__name__)
     api = Api(app)
 
-    mapper = make_type_mapper(fr.Raw)
+    mapper = utils.make_type_mapper(fr.Raw)
     result = mapper(ma.Raw(), api=api, model_name="test_model_name", operation="load")
     assert not result.required
 
 
 def test__maybe_add_operation_passes_through_if_no_load_only():
-    from flask_accepts.utils import _maybe_add_operation
-
     class TestSchema(Schema):
         _id = ma.Integer()
 
     model_name = "TestSchema"
     operation = "load"
 
-    result = _maybe_add_operation(TestSchema(), model_name, operation)
+    result = utils._maybe_add_operation(TestSchema(), model_name, operation)
 
     expected = model_name
     assert result == expected
 
 
 def test__maybe_add_operation_append_if_load_only():
-    from flask_accepts.utils import _maybe_add_operation
-
     class TestSchema(Schema):
         _id = ma.Integer(load_only=True)
 
     model_name = "TestSchema"
     operation = "load"
 
-    result = _maybe_add_operation(TestSchema(), model_name, operation)
+    result = utils._maybe_add_operation(TestSchema(), model_name, operation)
 
     expected = f"{model_name}-load"
     assert result == expected
 
 
 def test__maybe_add_operation_passes_through_if_no_dump_only():
-    from flask_accepts.utils import _maybe_add_operation
-
     class TestSchema(Schema):
         _id = ma.Integer()
 
     model_name = "TestSchema"
     operation = "dump"
 
-    result = _maybe_add_operation(TestSchema(), model_name, operation)
+    result = utils._maybe_add_operation(TestSchema(), model_name, operation)
 
     expected = model_name
     assert result == expected
 
 
 def test__maybe_add_operation_append_if_dump_only():
-    from flask_accepts.utils import _maybe_add_operation
-
     class TestSchema(Schema):
         _id = ma.Integer(dump_only=True)
 
     model_name = "TestSchema"
     operation = "dump"
 
-    result = _maybe_add_operation(TestSchema(), model_name, operation)
+    result = utils._maybe_add_operation(TestSchema(), model_name, operation)
 
     expected = f"{model_name}-dump"
     assert result == expected
