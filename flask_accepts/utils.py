@@ -4,7 +4,6 @@ from flask_restx import fields as fr, inputs
 from marshmallow import fields as ma
 from marshmallow import __version_info__ as marshmallow_version
 from marshmallow.schema import Schema, SchemaMeta
-import uuid
 
 
 _ma_key_for_fr_example_key = "dump_default"
