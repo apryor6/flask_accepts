@@ -1,3 +1,6 @@
+import json
+
+from attr import dataclass
 from flask import request, Response, jsonify
 from flask_restx import Resource, Api
 from marshmallow import Schema, fields
@@ -5,6 +8,7 @@ from werkzeug.exceptions import InternalServerError
 
 from flask_accepts.decorators import accepts, responds
 from flask_accepts.tests.fixtures import app, client  # noqa
+
 
 def test_responds(app, client):  # noqa
     class TestSchema(Schema):
@@ -460,3 +464,53 @@ def test_swagger_respects_existing_response_docs(app, client):  # noqa
         assert route_docs["responses"]["200"]["description"] == "My description"
         assert route_docs["responses"]["401"]["description"] == "Not Authorized"
         assert route_docs["responses"]["404"]["description"] == "Not Found"
+
+def test_responds_can_use_alt_schema(app, client):  # noqa
+    class DefaultSchema(Schema):
+        id = fields.Integer()
+        name = fields.String()
+
+    class ErrorSchema(Schema):
+        code = fields.String()
+        error = fields.String()
+
+    class TokenSchema(Schema):
+        access_token = fields.String()
+        refresh_token = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        alt_schemas = {
+            888: TokenSchema,
+            666: ErrorSchema,
+        }
+        @responds(schema=DefaultSchema, api=api, alt_schemas=alt_schemas)
+        def get(self):
+            resp_code = int(request.args.get("code"))
+
+            if resp_code == 888:
+                resp = {"access_token": "test_access_token", "refresh_token": "test_refresh_token"}
+            elif resp_code == 666:
+                resp = {"code": "UNKNOWN", "error": "Unhandled Exception"}
+            else:
+                resp = {"id": 1234, "name": "Fred Smith"}
+
+            return resp, resp_code
+
+    with client as cl:
+        # test alternate schema
+        resp = cl.get("/test?code=666")
+        assert resp.status_code == 666
+        assert resp.json == {"code": "UNKNOWN", "error": "Unhandled Exception"}
+
+        # test different alternate schema
+        resp = cl.get("/test?code=888")
+        assert resp.status_code == 888
+        assert resp.json == {"access_token": "test_access_token", "refresh_token": "test_refresh_token"}
+
+        # test fallback to default schema with status code passthrough
+        resp = cl.get("/test?code=401")
+        assert resp.status_code == 401
+        assert resp.json == {"id": 1234, "name": "Fred Smith"}
