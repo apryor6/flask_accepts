@@ -4,10 +4,10 @@
 
 ---
 
-- [flask_accepts](#flask-accepts)
+- [flask_accepts](#flask_accepts)
   - [Installation](#installation)
   - [Basic usage](#basic-usage)
-  - [Usage with "vanilla Flask"](#usage-with--vanilla-flask-)
+  - [Usage with "vanilla Flask"](#usage-with-vanilla-flask)
   * [Usage with Marshmallow schemas](#usage-with-marshmallow-schemas)
     - [Marshmallow validators](#marshmallow-validators)
     - [Default values](#default-values)
