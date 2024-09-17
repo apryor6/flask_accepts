@@ -303,19 +303,20 @@ def responds(
             if isinstance(rv, Response):
                 return rv
 
+            resp_schema = schema
             # allow overriding the status code passed to Flask
             if isinstance(rv, tuple):
                 rv, status_code = rv
                 if alt_schemas and status_code in alt_schemas:
-                    # override the response schema
-                    schema = alt_schemas[status_code]
+                    # override the default response schema
+                    resp_schema = _get_or_create_schema(alt_schemas[status_code])
 
-            if schema:
-                serialized = schema.dump(rv)
+            if resp_schema:
+                serialized = resp_schema.dump(rv)
 
                 # Validate data if asked to (throws)
                 if validate:
-                    errs = schema.validate(serialized)
+                    errs = resp_schema.validate(serialized)
                     if errs:
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
