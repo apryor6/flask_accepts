@@ -1,4 +1,6 @@
-flask>=2,<3
-flask-restx>=1,<2
+flask>=2,<3; python_version < '3.8'
+flask>=3.0; python_version >= '3.8'
+flask-restx==1.1; python_version < '3.8'
+flask-restx>=1.2; python_version >= '3.8'
 werkzeug>=2,<3; python_version < '3.8'
 werkzeug>=3,<4; python_version >= '3.8'
