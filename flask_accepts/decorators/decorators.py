@@ -298,7 +298,14 @@ def responds(
             nonlocal status_code
 
             rv = func(*args, **kwargs)
-
+            parameter_status_code = status_code
+            if rv:              
+               if getattr(rv, '__iter__', None):
+                  if "status" in rv:
+                       if type(rv['status']) == int:
+                           parameter_status_code = rv['status']
+                       else:
+                           parameter_status_code = 200
             # If a Flask response has been made already, it is passed through unchanged
             if isinstance(rv, Response):
                 return rv
@@ -321,7 +328,7 @@ def responds(
                         raise InternalServerError(
                             description="Server attempted to return invalid data"
                         )
-
+               
                 # Apply the flask-restx mask after validation
                 serialized = _apply_restx_mask(serialized)
             else:
@@ -349,8 +356,8 @@ def responds(
 
             if not _is_method(func):
                 # Regular route, need to manually create Response
-                return jsonify(serialized), status_code
-            return serialized, status_code
+                return jsonify(serialized), parameter_status_code
+            return serialized, parameter_status_code
 
         nonlocal schema
         # Add Swagger
