@@ -126,7 +126,8 @@ def accepts(
             # Handle Marshmallow schema for request body
             if schema:
                 try:
-                    obj = schema.load(request.get_json(force=True) or {})
+                    empty_default = {} if schema.many is False else []
+                    obj = schema.load(request.get_json(force=True) or empty_default)
                     request.parsed_obj = obj
                 except ValidationError as ex:
                     schema_error = ex.messages

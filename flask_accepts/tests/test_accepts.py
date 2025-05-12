@@ -689,3 +689,41 @@ def test_responds_with_validate(app, client):  # noqa
         obj = resp.json
         assert resp.status_code == 500
         assert resp.json == {"message": "Server attempted to return invalid data"}
+
+
+def test_accept_schema_instance_respects_many_true_empty_payload(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(schema=TestSchema(many=True), api=api)
+        def post(self):
+            return request.parsed_obj
+
+    with client as cl:
+        resp = cl.post("/test", json={}, content_type='application/json')
+        obj = resp.json
+        assert obj == []
+
+
+def test_accept_schema_instance_respects_many_false_empty_payload(app, client):  # noqa
+    class TestSchema(Schema):
+        _id = fields.Integer()
+        name = fields.String()
+
+    api = Api(app)
+
+    @api.route("/test")
+    class TestResource(Resource):
+        @accepts(schema=TestSchema(many=False), api=api)
+        def post(self):
+            return request.parsed_obj
+
+    with client as cl:
+        resp = cl.post("/test", json={}, content_type='application/json')
+        obj = resp.json
+        assert obj == {}
