@@ -141,6 +141,7 @@ type_map = {
     ma.Url: fr.Url,
     ma.URL: fr.Url,
     ma.UUID: fr.String,
+    ma.IPInterface: fr.String,
 }
 
 
