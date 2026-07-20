@@ -70,7 +70,7 @@ def test_unpack_nested_self():
 
     class IntegerSchema(Schema):
         my_int = ma.Integer()
-        children = ma.Nested("self", exclude=["children"])
+        children = ma.Nested(lambda: IntegerSchema(exclude=["children"]))
 
     schema = IntegerSchema()
 
@@ -85,7 +85,7 @@ def test_unpack_nested_self_many():
 
     class IntegerSchema(Schema):
         my_int = ma.Integer()
-        children = ma.Nested("self", exclude=["children"], many=True)
+        children = ma.Nested(lambda: IntegerSchema(exclude=["children"]), many=True)
 
     schema = IntegerSchema()
 
@@ -428,7 +428,7 @@ def test_ma_field_to_reqparse_argument_single_values():
     assert "help" not in result
 
     # Test that complex fields default to string.
-    result = utils.ma_field_to_reqparse_argument(ma.Email(required=True, description="A description"))
+    result = utils.ma_field_to_reqparse_argument(ma.Email(required=True, metadata={'description': "A description"}))
     assert result["type"] is str
     assert result["required"] is True
     assert result["action"] == "store"
@@ -441,7 +441,7 @@ def test_ma_field_to_reqparse_argument_list_values():
     assert result["action"] == "append"
     assert "help" not in result
 
-    result = utils.ma_field_to_reqparse_argument(ma.List(ma.String(), description="A description"))
+    result = utils.ma_field_to_reqparse_argument(ma.List(ma.String(), metadata={'description': "A description"}))
     assert result["type"] is str
     assert result["required"] is False
     assert result["action"] == "append"

@@ -1,28 +1,28 @@
+from importlib.metadata import version as marshmallow_version
 from typing import Optional, Type, Union
 
 from flask_restx import fields as fr, inputs
-from marshmallow import fields as ma
-from marshmallow import __version_info__ as marshmallow_version
+from marshmallow import fields as ma, missing
 from marshmallow.schema import Schema, SchemaMeta
-
+from packaging.version import Version
 
 _ma_key_for_fr_example_key = "dump_default"
 _ma_key_for_fr_default_key = "load_default"
-if marshmallow_version < (3, 13, 0):
+if Version(marshmallow_version("marshmallow")) < Version("3.13.0"):
     _ma_key_for_fr_example_key = "default"
     _ma_key_for_fr_default_key = "missing"
 
 
-def unpack_list(val, api, model_name: str = None, operation: str = "dump"):
+def unpack_list(val, api, model_name: Optional[str] = None, operation: str = "dump"):
     model_name = model_name or get_default_model_name()
     return fr.List(
         map_type(val.inner, api, model_name, operation), **_ma_field_to_fr_field(val)
     )
 
 
-def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
-    if val.nested == "self":
-        return unpack_nested_self(val, api, model_name, operation)
+def unpack_nested(val, api, model_name: Optional[str] = None, operation: str = "dump"):
+    if callable(val.nested):
+        return unpack_nested_callable(val, api, model_name, operation)
 
     model_name = get_default_model_name(val.nested)
 
@@ -38,8 +38,8 @@ def unpack_nested(val, api, model_name: str = None, operation: str = "dump"):
     )
 
 
-def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"):
-    model_name = model_name or get_default_model_name(val.schema)
+def unpack_nested_callable(val, api, model_name: Optional[str] = None, operation: str = "dump"):
+    model_name = model_name or get_default_model_name(val.nested())
     fields = {
         k: map_type(v, api, model_name, operation)
         for k, v in (vars(val.schema).get("fields").items())
@@ -57,7 +57,7 @@ def unpack_nested_self(val, api, model_name: str = None, operation: str = "dump"
         )
 
 
-def for_swagger(schema, api, model_name: str = None, operation: str = "dump"):
+def for_swagger(schema, api, model_name: Optional[str] = None, operation: str = "dump"):
     """
     Convert a marshmallow schema to equivalent Flask-restx model
 
@@ -177,7 +177,7 @@ def _ma_field_to_fr_field(value: ma.Field) -> dict:
     fr_field_parameters = {}
 
     if hasattr(value, _ma_key_for_fr_example_key) \
-            and type(getattr(value, _ma_key_for_fr_example_key)) != ma.utils._Missing:
+            and type(getattr(value, _ma_key_for_fr_example_key)) != missing:
         fr_field_parameters["example"] = getattr(value, _ma_key_for_fr_example_key)
 
     if hasattr(value, "required"):
@@ -187,7 +187,7 @@ def _ma_field_to_fr_field(value: ma.Field) -> dict:
         fr_field_parameters["description"] = value.metadata["description"]
 
     if hasattr(value, _ma_key_for_fr_default_key) \
-            and type(getattr(value, _ma_key_for_fr_default_key)) != ma.utils._Missing:
+            and type(getattr(value, _ma_key_for_fr_default_key)) != missing:
         fr_field_parameters["default"] = getattr(value, _ma_key_for_fr_default_key)
 
     return fr_field_parameters

@@ -1,20 +1,20 @@
 from collections import OrderedDict
-from typing import Type, Union, Dict
-from flask import jsonify
-from werkzeug.wrappers import Response
-from werkzeug.exceptions import BadRequest, InternalServerError
-from marshmallow import Schema, EXCLUDE, RAISE
-from marshmallow.fields import List
-from marshmallow.exceptions import ValidationError
+from typing import Type, Union, Dict, Optional
 
+from flask import jsonify
+from flask_restx import reqparse, inputs
 from flask_restx.model import Model
-from flask_restx import fields, reqparse, inputs
+from marshmallow import Schema, EXCLUDE, RAISE
+from marshmallow.exceptions import ValidationError
+from werkzeug.exceptions import BadRequest, InternalServerError
+from werkzeug.wrappers import Response
+
 from flask_accepts.utils import for_swagger, get_default_model_name, is_list_field, ma_field_to_reqparse_argument
 
 
 def accepts(
     *args,
-    model_name: str = None,
+    model_name: Optional[str] = None,
     schema: Union[Schema, Type[Schema], None] = None,
     query_params_schema: Union[Schema, Type[Schema], None] = None,
     headers_schema: Union[Schema, Type[Schema], None] = None,
@@ -30,7 +30,7 @@ def accepts(
     Args:
         *args: any number of dictionaries containing parameters to pass to
             reqparse.RequestParser().add_argument(). A single string parameter may also be
-            provided that is used as the model name.  By default these parameters
+            provided that is used as the model name.  By default, these parameters
             will be parsed using the default logic however, if a schema is provided then
             the JSON body is assumed to correspond to it and will not be parsed for query params.
         model_name (str): the name to pass to api.Model, can optionally be provided as a str argument to *args
@@ -46,7 +46,7 @@ def accepts(
             also be added to the `request.parsed_args` dict. Defaults to None.
         many (bool, optional): The Marshmallow schema `many` parameter, which will
             return a list of the corresponding schema objects when set to True. This
-            flag corresopnds only to the request body schema, and not the
+            flag corresponds only to the request body schema, and not the
             `query_params_schema` or `headers_schema` arguments.
 
     Returns:
@@ -231,15 +231,15 @@ def accepts(
 
 def responds(
     *args,
-    model_name: str = None,
-    schema: Union[Schema, Type[Schema]] = None,
-    alt_schemas: Dict[int, Union[Schema, Type[Schema]]] = None,
+    model_name: Optional[str] = None,
+    schema: Optional[Union[Schema, Type[Schema]]] = None,
+    alt_schemas: Optional[Dict[int, Union[Schema, Type[Schema]]]] = None,
     many: bool = False,
     api=None,
     envelope=None,
     status_code: int = 200,
     validate: bool = False,
-    description: str = None,
+    description: Optional[str] = None,
     use_swagger: bool = True,
     skip_none: bool = False,
 ):
@@ -280,10 +280,8 @@ def responds(
     for qp in query_params:
         _parser.add_argument(**qp, location="values")
 
-    ordered = None
     if schema:
         schema = _get_or_create_schema(schema, many=many)
-        ordered = schema.ordered
 
     model_name = model_name or get_default_model_name(schema)
     model_from_parser = _model_from_parser(model_name=model_name, parser=_parser)
@@ -331,7 +329,7 @@ def responds(
                 serialized = marshal(rv, model_from_parser)
 
             if envelope:
-                serialized = OrderedDict([(envelope, serialized)]) if ordered else {envelope: serialized}
+                serialized = {envelope: serialized}
 
             if skip_none:
                 def remove_none(obj):
@@ -442,7 +440,7 @@ def merge(first: dict, second: dict) -> dict:
 
 
 def _document_like_marshal_with(
-    values, status_code: int = 200, description: str = None
+    values, status_code: int = 200, description: Optional[str] = None
 ):
     description = description or "Success"
 
@@ -469,7 +467,7 @@ def _convert_multidict_values_to_schema(multidict, schema):
     """Helper function that converts values in the given multidict into either
     single or list values based on the schema definition.
 
-    This function is necessary for parsing multidict mappings like querystrings
+    This function is necessary for parsing multidict mappings like query strings
     where it's ambiguous whether the value is single or list value. Take the
     following query string as an example:
 

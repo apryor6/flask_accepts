@@ -4,7 +4,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/python:3.11.15
         environment:
           FLASK_CONFIG: test
     steps:
